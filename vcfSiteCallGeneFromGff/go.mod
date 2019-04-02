@@ -1,1 +1,1 @@
-module github.com/tigernaxo/SNPannotator
+module github.com/tigernaxo/ATRIwork/vcfSiteCallGeneFromGff

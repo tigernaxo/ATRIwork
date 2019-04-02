@@ -50,7 +50,7 @@ func SiteFromVCF(vcf string) []int {
 	}
 	defer f.Close()
 
-	sites := make([]int, 0)
+	sites := make([]int, 0, 10000)
 	scanner := bufio.NewScanner(f)
 	// lineArr := make([]string, 2)
 	var line string
@@ -75,7 +75,7 @@ func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 	fmt.Printf("Extracting feature class [%s] from file [%s]\n", featureClass, gffFile)
 	fs := FeatureSet{
 		Class:    featureClass,
-		Features: []*Feature{},
+		Features: make([]*Feature,0,10000),
 	}
 	f, err := os.Open(gffFile)
 	if err != nil {
