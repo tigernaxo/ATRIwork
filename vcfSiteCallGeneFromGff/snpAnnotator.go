@@ -20,8 +20,10 @@ type VCFAnnotator struct {
 // AnnotateAndSave 註解之後直接存檔
 func (v *VCFAnnotator) AnnotateAndSave(fileName string) {
 
+	fmt.Println("Sorting snp sites...")
 	sort.Ints(v.SNPsites)
 
+	fmt.Printf("Creating file: [%s]\n", fileName)
 	file, err := os.Create(fileName)
 	if err != nil {
 		log.Panic(err)
@@ -31,7 +33,7 @@ func (v *VCFAnnotator) AnnotateAndSave(fileName string) {
 	for i := range v.SNPsites {
 		for _, f := range v.FeatureSet.Features {
 			if f.Start <= i && f.End >= i {
-				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i, strings.TrimPrefix(f.Name, "Name="), string(f.Strand), f.Start, f.End)
+				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i, f.Name, string(f.Strand), f.Start, f.End)
 				_, err := file.WriteString(s)
 				if err != nil {
 					log.Panic(err)
@@ -75,7 +77,7 @@ func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 	fmt.Printf("Extracting feature class [%s] from file [%s]\n", featureClass, gffFile)
 	fs := FeatureSet{
 		Class:    featureClass,
-		Features: make([]*Feature,0,10000),
+		Features: make([]*Feature, 0, 100000),
 	}
 	f, err := os.Open(gffFile)
 	if err != nil {
@@ -99,7 +101,7 @@ func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 			fs.Features = append(fs.Features, &Feature{
 				Start:  start,
 				End:    end,
-				Name:   string(pattern.Find([]byte(lineArr[8]))),
+				Name:   strings.TrimPrefix(string(pattern.Find([]byte(lineArr[8]))), "Name="),
 				Strand: byte(lineArr[6][0]),
 			})
 		}
