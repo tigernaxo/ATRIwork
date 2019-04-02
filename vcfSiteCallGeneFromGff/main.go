@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/tigernaxo/ATRIwork/fileformat"
 )
 
 func main() {
@@ -15,8 +17,8 @@ func main() {
 	out := os.Args[3]
 
 	v := VCFAnnotator{
-		SNPsites:   SiteFromVCF(vcf),
-		FeatureSet: FeatureSetFromGFF("gene", gff),
+		SNPsites:   fileformat.SiteFromVCF(vcf),
+		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 	v.AnnotateAndSave(out)
 }
