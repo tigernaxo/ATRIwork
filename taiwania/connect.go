@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"time"
 
@@ -11,25 +12,29 @@ import (
 
 // ConnectAndRun direct connect to server then run command
 // modified from official example "Dial"
-func ConnectAndRun(ip string, port int, id, password, command string) *bytes.Buffer {
+func ConnectAndRun(host string, port int, id, password, command string) *bytes.Buffer {
+
+	address := fmt.Sprintf("%s:%d", host, port)
 	// var hostKey ssh.PublicKey
+
 	// An SSH client is represented with a ClientConn.
-	//
-	// To authenticate with the remote server you must pass at least one
-	// implementation of AuthMethod via the Auth field in ClientConfig,
-	// and provide a HostKeyCallback.
 	config := &ssh.ClientConfig{
 		User: id,
+		// To authenticate with the remote server you must:
+		//   1.pass at least one implementation of AuthMethod
+		//   2.provide a HostKeyCallback.
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		// HostKeyCallback need to migrate to FixedHostKey for production
 		// HostKeyCallback: ssh.FixedHostKey(hostKey),
 	}
-	client, err := ssh.Dial("tcp", ip+":"+string(port), config)
+	client, err := ssh.Dial("tcp", address, config)
 	if err != nil {
 		log.Fatal("Failed to dial: ", err)
 	}
+
 	// Each ClientConn can support multiple interactive sessions,
 	// represented by a Session.
 	session, err := client.NewSession()
@@ -38,11 +43,12 @@ func ConnectAndRun(ip string, port int, id, password, command string) *bytes.Buf
 	}
 	defer session.Close()
 
-	// Once a Session is created, you can execute a single command on
-	// the remote side using the Run method.
+	// Once a Session is created, you can:
+	//   1.Execute a single command by session.Run.
+	//   2.Get command returned info by bytes.Buffer
 	var b bytes.Buffer
 	session.Stdout = &b
-	if err := session.Run("/usr/bin/whoami"); err != nil {
+	if err := session.Run(command); err != nil {
 		log.Fatal("Failed to run: " + err.Error())
 	}
 	return &b
