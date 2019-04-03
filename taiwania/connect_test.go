@@ -5,6 +5,6 @@ import (
 )
 
 func TestConnectAndRun(t *testing.T) {
-	b := ConnectAndRun("localhost", 22, "chiao", "anna1205", "whoami")
+	b := ConnectAndRun("ptt.cc", 22, "bbsu", "", "")
 	t.Log(b.String())
 }
