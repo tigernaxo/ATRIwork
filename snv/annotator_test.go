@@ -8,8 +8,8 @@ import (
 
 func TestAnnotateAndSave(t *testing.T) {
 	v := VCFAnnotator{
-		SNPsites:   fileformat.SiteFromVCF("rawData/snp.vcf"),
-		FeatureSet: fileformat.FeatureSetFromGFF("gene", "rawData/AE006468.gff3"),
+		SNPsites:   fileformat.SiteFromVCF("data/snp.vcf"),
+		FeatureSet: fileformat.FeatureSetFromGFF("gene", "data/AE006468.gff3"),
 	}
 	v.AnnotateAndSave("out.tsv")
 }
