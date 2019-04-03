@@ -2,13 +2,16 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
+	"time"
 
+	"github.com/pquerna/otp/totp"
 	"golang.org/x/crypto/ssh"
 )
 
-func main() {
+// ConnectAndRun direct connect to server then run command
+// modified from official example "Dial"
+func ConnectAndRun(ip string, port int, id, password, command string) *bytes.Buffer {
 	// var hostKey ssh.PublicKey
 	// An SSH client is represented with a ClientConn.
 	//
@@ -16,14 +19,14 @@ func main() {
 	// implementation of AuthMethod via the Auth field in ClientConfig,
 	// and provide a HostKeyCallback.
 	config := &ssh.ClientConfig{
-		User: "chiao",
+		User: id,
 		Auth: []ssh.AuthMethod{
-			ssh.Password("anna1205"),
+			ssh.Password(password),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		// HostKeyCallback: ssh.FixedHostKey(hostKey),
 	}
-	client, err := ssh.Dial("tcp", "localhost:22", config)
+	client, err := ssh.Dial("tcp", ip+":"+string(port), config)
 	if err != nil {
 		log.Fatal("Failed to dial: ", err)
 	}
@@ -42,5 +45,14 @@ func main() {
 	if err := session.Run("/usr/bin/whoami"); err != nil {
 		log.Fatal("Failed to run: " + err.Error())
 	}
-	fmt.Println(b.String())
+	return &b
+}
+
+// GetTOTP direct get totp from secret
+func GetTOTP(secret string) string {
+	otp, err := totp.GenerateCode(secret, time.Now().UTC())
+	if err != nil {
+		log.Panic(err)
+	}
+	return otp
 }
