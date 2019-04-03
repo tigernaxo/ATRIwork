@@ -10,9 +10,16 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// ConnectAndRun direct connect to server then run command
+// Todo: function open a new shell pipe
+// Note: functions maybe use to run more than one command
+// func (s *Session) StderrPipe() (io.Reader, error)
+// func (s *Session) StdinPipe() (io.WriteCloser, error)
+// func (s *Session) StdoutPipe() (io.Reader, error)
+// func (s *Session) Wait() error
+
+// ConnectAndRunOnce direct connect to server then run command
 // modified from official example "Dial"
-func ConnectAndRun(host string, port int, id, password, command string) *bytes.Buffer {
+func ConnectAndRunOnce(host string, port int, id, password, command string) *bytes.Buffer {
 
 	address := fmt.Sprintf("%s:%d", host, port)
 	// var hostKey ssh.PublicKey
