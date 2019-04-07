@@ -16,6 +16,7 @@ import (
 // func (s *Session) StdinPipe() (io.WriteCloser, error)
 // func (s *Session) StdoutPipe() (io.Reader, error)
 // func (s *Session) Wait() error
+// http://blog.ralch.com/tutorial/golang-ssh-connection/
 
 // ConnectAndRunOnce direct connect to server then run command
 // modified from official example "Dial"
