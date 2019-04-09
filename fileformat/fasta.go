@@ -60,9 +60,9 @@ func ReadSingleFasta(fasta string) (id string, sequence []byte) {
 // ReadMultiFasta receive file name and return fasta content
 // func ReadMultiFasta(fasta string) (id []string, sequences [][]byte)
 
-// SNVSitesAllToAll take slice of id, seq byte and return snv sites, snv alignment
-// SNVSitesAllToAll treat - different from n/N, so - and n on the same site are consider as snv.
-func SNVSitesAllToAll(seqs [][]byte) (siteMap []bool, snvAlign [][]byte) {
+// SNVMapAllToAll take slice of id, seq byte and return snv sites, snv alignment
+// SNVMapAllToAll treat - different from n/N, so - and n on the same site are consider as snv.
+func SNVMapAllToAll(seqs [][]byte) (snvMap []bool, snvAlign [][]byte) {
 	// 先判斷最大長度是多少
 	var maxLength int
 	for _, seq := range seqs {
@@ -72,9 +72,9 @@ func SNVSitesAllToAll(seqs [][]byte) (siteMap []bool, snvAlign [][]byte) {
 	}
 
 	snvAlign = make([][]byte, 0, len(seqs))
-	siteMap = make([]bool, maxLength)
-	for i := range siteMap {
-		siteMap[i] = false
+	snvMap = make([]bool, maxLength)
+	for i := range snvMap {
+		snvMap[i] = false
 	}
 
 	// 以第一個序列作為參考序列，並填充-到末端
@@ -82,7 +82,7 @@ func SNVSitesAllToAll(seqs [][]byte) (siteMap []bool, snvAlign [][]byte) {
 	if refLength := copy(ref, seqs[0]); refLength < maxLength {
 		for i := refLength; i < maxLength; i++ {
 			ref[i] = 45
-			siteMap[i] = true
+			snvMap[i] = true
 		}
 	}
 
@@ -94,22 +94,22 @@ func SNVSitesAllToAll(seqs [][]byte) (siteMap []bool, snvAlign [][]byte) {
 		// 處理len(seq)範圍內的部份
 		for i, nt := range seq {
 			// 取得snv map
-			if !siteMap[i] && (nt-ref[i])%32 != 0 {
-				siteMap[i] = true
+			if !snvMap[i] && (nt-ref[i])%32 != 0 {
+				snvMap[i] = true
 			}
 		}
 
 		// 處理大於seq小於maxLength的部份
 		for tailSpaceIndex := len(seq); tailSpaceIndex < maxLength; tailSpaceIndex++ {
 			// 如果ref不是-(ref有序列而seq沒有)就判斷該位置是snv
-			if !siteMap[tailSpaceIndex] && ref[tailSpaceIndex] != 45 {
-				siteMap[tailSpaceIndex] = true
+			if !snvMap[tailSpaceIndex] && ref[tailSpaceIndex] != 45 {
+				snvMap[tailSpaceIndex] = true
 			}
 		}
 	}
-	// 取得siteMap內true的數量
+	// 取得snvMap內true的數量
 	SNVnumber := 0
-	for _, b := range siteMap {
+	for _, b := range snvMap {
 		if b {
 			SNVnumber++
 		}
@@ -120,7 +120,7 @@ func SNVSitesAllToAll(seqs [][]byte) (siteMap []bool, snvAlign [][]byte) {
 	for _, seq := range seqs {
 		seqSNV := make([]byte, 0, SNVnumber)
 		for i := range seq {
-			if siteMap[i] {
+			if snvMap[i] {
 				seqSNV = append(seqSNV, seq[i])
 			}
 		}
@@ -130,7 +130,12 @@ func SNVSitesAllToAll(seqs [][]byte) (siteMap []bool, snvAlign [][]byte) {
 		snvAlign = append(snvAlign, seqSNV)
 	}
 
-	return siteMap, snvAlign
+	return snvMap, snvAlign
+}
+
+// SNVsitesFromRef to be finish
+func SNVsitesFromRef(ref []byte, seq []byte) (snvMap []bool) {
+	return []bool{true, true}
 }
 
 // IsSingleFasta receive file name and check weather the file is fasta or not
