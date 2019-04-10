@@ -1,4 +1,4 @@
-package main
+package snv
 
 import (
 	"fmt"
@@ -16,8 +16,8 @@ func main() {
 	gff := os.Args[2]
 	out := os.Args[3]
 
-	v := VCFAnnotator{
-		SNPsites:   fileformat.SiteFromVCF(vcf),
+	v := SiteAnnotator{
+		sites:      fileformat.SiteFromVCF(vcf),
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 	v.AnnotateAndSave(out)
