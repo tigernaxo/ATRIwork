@@ -6,6 +6,32 @@ import (
 	"github.com/tigernaxo/ATRIwork/fileformat"
 )
 
+// SiteMapUpdate 根據ref和seq更新siteMap
+func SiteMapUpdate(siteMap []bool, ref []byte, seq []byte) (newSiteMap []bool) {
+	// 如果seq > siteMap就要append
+	// 要注意ref out of index
+	if len(seq) > len(siteMap) {
+		newMap := make([]bool, 0, len(seq))
+		for i := copy(newMap, siteMap); i < len(seq); i++ {
+			switch seq[i] {
+			case 45:
+				newMap[i] = false
+			default:
+				newMap[i] = true
+			}
+		}
+		siteMap = newMap
+	}
+
+	// 如果數字不同就true siteMap
+	for i := range ref {
+		if !siteMap[i] && (ref[i]-seq[i])%32 != 0 {
+			siteMap[i] = true
+		}
+	}
+	return siteMap
+}
+
 // SiteMapAllToAll take slice of id, seq byte and return snv sites, snv alignment
 // SiteMapAllToAll treat - different from n/N, so - and n on the same site are consider as snv.
 func SiteMapAllToAll(seqs [][]byte) (snvMap []bool, snvAlign [][]byte) {
