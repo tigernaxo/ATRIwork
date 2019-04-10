@@ -36,13 +36,21 @@ func main() {
 	fmt.Printf("Log: Sequence number: %d\n", len(fastas))
 
 	seqs := make([][]byte, 0, len(fastas))
-	ids := make([]string, 0, len(fastas))
 
+	c := make(chan []byte, len(fastas))
 	for _, fa := range fastas {
-		fmt.Printf("Log: Reading file: %s\n", fa)
-		id, seq := fileformat.ReadSingleFasta(fa)
-		seqs = append(seqs, seq)
-		ids = append(ids, id)
+		go func(f string, c chan []byte) {
+			fmt.Printf("Log: Reading file: %s\n", f)
+			_, seq := fileformat.ReadSingleFasta(f)
+			// seqs = append(seqs, seq)
+			c <- seq
+		}(fa, c)
+		// fmt.Printf("Log: Reading file: %s\n", fa)
+		// id, seq := fileformat.ReadSingleFasta(fa)
+		// seqs = append(seqs, seq)
+		faByte := <-c
+		seqs = append(seqs, faByte)
+
 	}
 	fmt.Printf("Log: Calculating SNV amoung all fasta...\n")
 	siteMap, _ := snv.SiteMapAllToAll(seqs)
