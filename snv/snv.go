@@ -6,8 +6,8 @@ import (
 	"github.com/tigernaxo/ATRIwork/fileformat"
 )
 
-// MapAllToAll take slice of id, seq byte and return snv sites, snv alignment
-// MapAllToAll treat - different from n/N, so - and n on the same site are consider as snv.
+// SiteMapAllToAll take slice of id, seq byte and return snv sites, snv alignment
+// SiteMapAllToAll treat - different from n/N, so - and n on the same site are consider as snv.
 func SiteMapAllToAll(seqs [][]byte) (snvMap []bool, snvAlign [][]byte) {
 	// 先判斷最大長度是多少
 	var maxLength int
@@ -79,7 +79,7 @@ func SiteMapAllToAll(seqs [][]byte) (snvMap []bool, snvAlign [][]byte) {
 	return snvMap, snvAlign
 }
 
-// SNVsitesFromRef to be finish
+// SiteMapFromRef to be finish
 func SiteMapFromRef(ref []byte, seq []byte) (snvMap []bool) {
 
 	// 如果seq的長度比ref長就跳錯
