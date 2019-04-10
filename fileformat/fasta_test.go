@@ -1,7 +1,6 @@
 package fileformat
 
 import (
-	"log"
 	"testing"
 )
 
@@ -20,7 +19,10 @@ func TestSNVMapAllToAll(t *testing.T) {
 	t.Log(m)
 	t.Log(a)
 }
-func TestLog(t *testing.T) {
-	log.Println("Couldn't read first byte")
-	t.Log("this is t.Log")
+func TestSNVsitesFromRef(t *testing.T) {
+	ref := []byte("AtCcATCGATnGNTGCa")
+	seq := []byte("ATCGATCGATCG-TGC")
+	b := SNVsitesFromRef(ref, seq)
+	t.Log(b)
+	t.Logf("length of snvMap: %d\n", len(b))
 }

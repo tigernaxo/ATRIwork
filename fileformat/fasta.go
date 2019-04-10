@@ -135,7 +135,34 @@ func SNVMapAllToAll(seqs [][]byte) (snvMap []bool, snvAlign [][]byte) {
 
 // SNVsitesFromRef to be finish
 func SNVsitesFromRef(ref []byte, seq []byte) (snvMap []bool) {
-	return []bool{true, true}
+
+	// 如果seq的長度比ref長就跳錯
+	if len(ref) < len(seq) {
+		log.Panic("Error: target sequence length is longer then reference")
+	}
+
+	// 先做一個空的snvMap並填滿false
+	snvMap = make([]bool, len(ref))
+	for i := range snvMap {
+		snvMap[i] = false
+	}
+
+	// 找出snv
+	for i, nt := range seq {
+		if (nt-ref[i])%32 != 0 {
+			snvMap[i] = true
+		}
+	}
+
+	// 處理reference多出來的部分
+	for i := len(seq); i < len(ref); i++ {
+		if !IsMisAlign(ref[i]) {
+			snvMap[i] = true
+		}
+	}
+
+	// 回傳snvMap
+	return snvMap
 }
 
 // IsSingleFasta receive file name and check weather the file is fasta or not
