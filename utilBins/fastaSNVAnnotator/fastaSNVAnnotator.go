@@ -48,9 +48,10 @@ func main() {
 		// fmt.Printf("Log: Reading file: %s\n", fa)
 		// id, seq := fileformat.ReadSingleFasta(fa)
 		// seqs = append(seqs, seq)
+	}
+	for i := 0; i < len(fastas); i++ {
 		faByte := <-c
 		seqs = append(seqs, faByte)
-
 	}
 	fmt.Printf("Log: Calculating SNV amoung all fasta...\n")
 	siteMap, _ := snv.SiteMapAllToAll(seqs)
