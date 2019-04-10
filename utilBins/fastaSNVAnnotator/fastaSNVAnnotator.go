@@ -32,24 +32,27 @@ import (
 func main() {
 	gff := os.Args[1]
 	fastas := os.Args[2:]
+	fmt.Printf("Log: Reference GFF: %s\n", gff)
+	fmt.Printf("Log: Sequence number: %d\n", len(fastas))
 
 	seqs := make([][]byte, 0, len(fastas))
 	ids := make([]string, 0, len(fastas))
 
 	for _, fa := range fastas {
+		fmt.Printf("Log: Reading file: %s\n", fa)
 		id, seq := fileformat.ReadSingleFasta(fa)
-		fmt.Printf("length of %s : %d\n", id, len(seq))
 		seqs = append(seqs, seq)
 		ids = append(ids, id)
 	}
+	fmt.Printf("Log: Calculating SNV amoung all fasta...\n")
 	siteMap, _ := snv.SiteMapAllToAll(seqs)
+
+	fmt.Printf("Log: Extracting gene from GFF...\n")
 	a := snv.SiteAnnotator{
 		Sites:      snv.SiteMapToSiteSlice(siteMap),
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
-	// fmt.Println(len(a.FeatureSet.Features))
-	// fmt.Println(len(seqs))
-	// fmt.Println(len(siteMap))
-	// fmt.Println(len(a.Sites))
+
+	fmt.Printf("Log: Annotating SNV ...\n")
 	a.AnnotateAndSave("annotatedSNV.tsv")
 }
