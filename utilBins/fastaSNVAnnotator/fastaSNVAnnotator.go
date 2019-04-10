@@ -31,20 +31,26 @@ import (
 
 func main() {
 	gff := os.Args[1]
-	fastas := os.Args[2:]
+	fmt.Printf("Log: Reading file: %s\n", os.Args[2])
+	_, ref := fileformat.ReadSingleFasta(os.Args[2])
+	fastas := os.Args[3:]
 	fmt.Printf("Log: Reference GFF: %s\n", gff)
 	fmt.Printf("Log: Sequence number: %d\n", len(fastas))
 
-	seqs := make([][]byte, 0, len(fastas))
-
+	siteMap := make([]bool, len(ref))
+	for i := range siteMap {
+		siteMap[i] = false
+	}
+	// TODO:不應該用[][]byte
+	// 應該seq比對完就丟棄，效能才會好
+	// 但是這樣就不能用SiteMapAllToAll
+	// 應該寫一個SiteMapUpdate(siteMap *[]bool, ref *[]byte, seq *[]byte)(newSiteMap []bool)
+	// library裡面都是傳值呼叫，也要修改
 	for _, fa := range fastas {
 		fmt.Printf("Log: Reading file: %s\n", fa)
 		_, seq := fileformat.ReadSingleFasta(fa)
-		seqs = append(seqs, seq)
+		siteMap = snv.SiteMapUpdate(siteMap, ref, seq)
 	}
-
-	fmt.Printf("Log: Calculating SNV amoung all fasta...\n")
-	siteMap, _ := snv.SiteMapAllToAll(seqs)
 
 	fmt.Printf("Log: Extracting gene from GFF...\n")
 	a := snv.SiteAnnotator{
