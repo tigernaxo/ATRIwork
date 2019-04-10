@@ -39,7 +39,6 @@ func ReadSingleFasta(fasta string) (id string, sequence []byte) {
 			}
 		default:
 			if isSeqSec && (IsAlphabet(b) || IsMisAlign(b)) {
-				// log.Panicf("i reaches %d, char is %d\n", i, int(b))
 				seq = append(seq, b)
 			} else if isIDSec {
 				idByte = append(idByte, b)
