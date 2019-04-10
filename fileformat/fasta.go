@@ -1,56 +1,48 @@
 package fileformat
 
 import (
-	"bufio"
+	"io/ioutil"
 	"log"
-	"os"
 )
 
 // ReadSingleFasta receive file name and return fasta content
 func ReadSingleFasta(fasta string) (id string, sequence []byte) {
 
-	f, err := os.Open(fasta)
+	content, err := ioutil.ReadFile(fasta)
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
-	defer f.Close()
 
 	idByte := make([]byte, 0, 50)
-	seq := make([]byte, 0, 10000)
-	scanner := bufio.NewScanner(f)
-	// > 62, \n10
+	seq := make([]byte, 0, 10000) // > 62, \n10
 	// - 45, A-Z 65-9, a-z 97-122
-	isIDSec, isSeqSec := false, false
+	isLineStart, isIDSec, isSeqSec := true, false, false
 
-	for scanner.Scan() {
-		for i, b := range scanner.Bytes() {
-			// 每一行開頭需判斷目前讀取的是id或sequence
-			if i == 0 {
-				switch b {
-				case 62:
-					// 從頭進入 id section的情況
-					if !isSeqSec && !isIDSec {
-						isIDSec, isSeqSec = true, false
-					}
-				default:
-					// 從id section 進入 sequence section的情況
-					if isIDSec {
-						isIDSec, isSeqSec = false, true
-					}
-				}
-			}
-			if isSeqSec {
-				// 如果正在讀取sequence
-				if IsAlphabet(b) || IsMisAlign(b) {
-					seq = append(seq, b)
-				} else {
-					log.Panic("Error: Sequence must be alphabet or -")
-				}
+	for _, b := range content {
+		// if i == 4857462 {
+		// 	log.Panicf("i reaches %d, char is %d\n", i, int(b))
+		// }
+		switch b {
+		case 10:
+			if isLineStart {
+				isLineStart, isIDSec, isSeqSec = true, false, false
 			} else if isIDSec {
-				// 如果正在讀取id
-				if i != 0 {
-					idByte = append(idByte, b)
-				}
+				isLineStart, isIDSec, isSeqSec = true, false, true
+			} else {
+				isLineStart, isIDSec = true, false
+			}
+		case 62:
+			if isLineStart {
+				isLineStart, isIDSec, isSeqSec = false, true, false
+			} else {
+				seq = append(seq, b)
+			}
+		default:
+			if isSeqSec && (IsAlphabet(b) || IsMisAlign(b)) {
+				// log.Panicf("i reaches %d, char is %d\n", i, int(b))
+				seq = append(seq, b)
+			} else if isIDSec {
+				idByte = append(idByte, b)
 			}
 		}
 	}

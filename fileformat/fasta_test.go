@@ -5,6 +5,7 @@ import (
 )
 
 func TestReadSingleFasta(t *testing.T) {
-	_, seq := ReadSingleFasta("./data/test.fasta")
-	t.Log(seq)
+	id, seq := ReadSingleFasta("../testData/S17-034-AE006468.2.SNV.fasta")
+	t.Error(id)
+	t.Error(len(seq))
 }

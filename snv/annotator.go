@@ -11,15 +11,26 @@ import (
 
 // SiteAnnotator 的除非是使用bed等等0base的系統，定位皆為1base。
 type SiteAnnotator struct {
-	sites      []int
+	Sites      []int
 	FeatureSet *fileformat.FeatureSet
+}
+
+// SiteMapToSiteSlice 把SiteMap轉成Sites
+func SiteMapToSiteSlice(siteMap []bool) (siteSlice []int) {
+	siteSlice = make([]int, 0, len(siteMap))
+	for i, b := range siteMap {
+		if b {
+			siteSlice = append(siteSlice, i+1)
+		}
+	}
+	return siteSlice
 }
 
 // AnnotateAndSave 註解之後直接存檔
 func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 
 	fmt.Println("Sorting snp sites...")
-	sort.Ints(v.sites)
+	sort.Ints(v.Sites)
 
 	fmt.Printf("Creating file: [%s]\n", fileName)
 	file, err := os.Create(fileName)
@@ -28,7 +39,7 @@ func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 	}
 	defer file.Close()
 
-	for i := range v.sites {
+	for i := range v.Sites {
 		for _, f := range v.FeatureSet.Features {
 			if f.Start <= i && f.End >= i {
 				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i, f.Name, string(f.Strand), f.Start, f.End)

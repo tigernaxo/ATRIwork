@@ -17,7 +17,7 @@ func main() {
 	out := os.Args[3]
 
 	v := SiteAnnotator{
-		sites:      fileformat.SiteFromVCF(vcf),
+		Sites:      fileformat.SiteFromVCF(vcf),
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 	v.AnnotateAndSave(out)
