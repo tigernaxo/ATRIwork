@@ -32,11 +32,11 @@ import (
 
 func main() {
 	gff := os.Args[1]
-	fmt.Printf("Log: Reading file: %s\n", os.Args[2])
+	fmt.Printf("Reading file: %s\n", os.Args[2])
 	_, ref := fileformat.ReadSingleFasta(os.Args[2])
 	fastas := os.Args[3:]
-	fmt.Printf("Log: Reference GFF: %s\n", gff)
-	fmt.Printf("Log: Sequence number: %d\n", len(fastas))
+	fmt.Printf("Reference GFF: %s\n", gff)
+	fmt.Printf("Sequence number: %d\n", len(fastas))
 
 	siteMap := make([]bool, len(ref))
 	for i := range siteMap {
@@ -44,23 +44,24 @@ func main() {
 	}
 
 	for _, fa := range fastas {
-		t := time.Now()
-		fmt.Printf("[%02v:%02v:%02v] ", t.Hour(), t.Minute(), t.Second())
-		fmt.Printf("Reading %s\n", fa)
+		fmt.Printf("%s Reading %s\n", timeStamp(), fa)
 		_, seq := fileformat.ReadSingleFasta(fa)
 		siteMap = snv.SiteMapUpdate(siteMap, ref, seq)
 	}
 
-	t := time.Now()
-	fmt.Printf("[%02v:%02v:%02v] ", t.Hour(), t.Minute(), t.Second())
-	fmt.Printf("Extracting gene from %s...\n", gff)
+	fmt.Printf("%s Extracting gene from %s...\n", timeStamp(), gff)
 	a := snv.SiteAnnotator{
 		SiteMap:    siteMap,
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 
-	t = time.Now()
-	fmt.Printf("[%02v:%02v:%02v] ", t.Hour(), t.Minute(), t.Second())
-	fmt.Printf("Annotating SNV ...\n")
+	fmt.Printf("%s Annotating SNV ...\n", timeStamp())
 	a.AnnotateAndSave("annotatedSNV.tsv")
+
+	fmt.Printf("%s Finished!\n", timeStamp())
+}
+
+func timeStamp() string {
+	t := time.Now()
+	return fmt.Sprintf("[%02v:%02v:%02v]", t.Hour(), t.Minute(), t.Second())
 }
