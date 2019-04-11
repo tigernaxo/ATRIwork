@@ -54,7 +54,7 @@ func main() {
 
 	fmt.Printf("Log: Extracting gene from GFF...\n")
 	a := snv.SiteAnnotator{
-		Sites:      snv.SiteMapToSiteSlice(siteMap),
+		SiteMap:    siteMap,
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 
