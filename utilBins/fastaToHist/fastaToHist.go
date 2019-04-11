@@ -47,7 +47,7 @@ func main() {
 
 	for _, fa := range seqs {
 		// 計算site map
-		fmt.Printf("%s Creating SNV Histogram: %s", timeStamp(), fa)
+		fmt.Printf("%s Creating SNV Histogram: %s\n", timeStamp(), fa)
 		_, seq := fileformat.ReadSingleFasta(fa)
 		siteMap := make([]bool, len(refSeq))
 		for i := range siteMap {
