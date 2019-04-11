@@ -1,6 +1,7 @@
 package histogram
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/jpeg"
@@ -46,10 +47,17 @@ func (p *PlotSites) PlotSites() {
 	}
 
 	// draw color by siteMap
+	de := 1
 	for i, b := range p.SitesMap {
 		if b {
 			start := int(math.Round(math.Max(float64(i)-p.Intensity/2, 0)))
 			end := int(math.Round(math.Min(float64(i)+p.Intensity/2, float64(len(p.SitesMap)))))
+			//debug
+			if de == 1 {
+				de++
+				fmt.Printf("drawing from %d to %d\n", start, end)
+			}
+			//debug
 			for j := start; j <= end; j++ {
 				rgba.Set(i, 0, p.Bgcolor)
 			}
