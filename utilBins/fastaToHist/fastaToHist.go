@@ -59,8 +59,8 @@ func main() {
 			Color:        &color.RGBA{255, 0, 0, 255},
 			Bgcolor:      &color.RGBA{0, 255, 0, 0},
 			Intensity:    float64(intensity),
-			OutName:      fa + ".jpg",
-			OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{1920, 20}},
+			OutName:      fa,
+			OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{20, 1920}},
 		}
 		p.PlotSites()
 	}
