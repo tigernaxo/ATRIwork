@@ -63,6 +63,12 @@ func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 
 	for _, feature := range v.FeatureSet.Features {
 		for i := feature.Start - 1; i < feature.End; i++ {
+			// debug
+			if i < 255 {
+				fmt.Printf("siteMap[%d]:%v", i, v.SiteMap[i])
+				fmt.Printf("feature:%v\n", feature)
+			}
+			// debug
 			if v.SiteMap[i] {
 				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i, feature.Name, string(feature.Strand), feature.Start, feature.End)
 				_, err := file.WriteString(s)
