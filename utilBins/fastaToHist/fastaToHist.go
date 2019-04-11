@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -45,6 +46,7 @@ func main() {
 		for i := range siteMap {
 			siteMap[i] = false
 		}
+		fmt.Printf("length of %s: %d\n", fa, len(seq))
 		siteMap = snv.SiteMapUpdate(siteMap, refSeq, seq)
 
 		p := &histogram.PlotSites{
