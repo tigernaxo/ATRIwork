@@ -66,7 +66,7 @@ func main() {
 			RefLen:       len(refSeq),
 			ConvasLen:    convasWidth,
 			Color:        &color.RGBA{255, 0, 0, 255},
-			Bgcolor:      &color.RGBA{0, 255, 0, 0},
+			Bgcolor:      &color.RGBA{0, 155, 155, 255},
 			Intensity:    float64(intensity),
 			OutName:      fa,
 			OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{20, 1920}},
