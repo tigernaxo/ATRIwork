@@ -18,13 +18,6 @@ func ReadSingleFasta(fasta string) (id string, sequence []byte) {
 	// > 62, \n 10, - 45
 	// A-Z 65-90, a-z 97-122
 	isLineStart, isIDSec, isSeqSec := true, false, false
-	// 行末\n              isLineStart = true
-	// id section行末的\n  IDsec = false
-	// seq section行末\n   isLineStart = true
-	// 每行第一個byte是\n       isLineStart = true
-	// 每行第一個byte是'>'       isIDsec = true
-	// 每行第一個byte但不是>\n 如果是其他: 開始或繼續seq section
-	// 每行第一個byte但不是>\n 如果是>: 結束seq section開始id section
 
 	for _, b := range content {
 		switch b {

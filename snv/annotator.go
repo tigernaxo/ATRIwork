@@ -14,17 +14,6 @@ type SiteAnnotator struct {
 	FeatureSet *fileformat.FeatureSet
 }
 
-// SiteMapToSiteSlice 把SiteMap轉成Sites
-func SiteMapToSiteSlice(siteMap []bool) (siteSlice []int) {
-	siteSlice = make([]int, 0, len(siteMap))
-	for i, b := range siteMap {
-		if b {
-			siteSlice = append(siteSlice, i+1)
-		}
-	}
-	return siteSlice
-}
-
 // AnnotateAndSave 註解之後直接存檔
 func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 

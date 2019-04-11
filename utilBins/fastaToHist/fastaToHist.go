@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/tigernaxo/ATRIwork/fileformat"
 	"github.com/tigernaxo/ATRIwork/histogram"
@@ -27,39 +28,32 @@ import (
 // 8.out name
 
 func main() {
+
 	intensity, err := strconv.Atoi(os.Args[1])
 	if err != nil {
 		log.Panic(err)
 	}
+
 	ref := os.Args[2]
 	_, refSeq := fileformat.ReadSingleFasta(ref)
-
 	seqs := os.Args[3:]
+
 	// 只要剩餘的convas佔超過全部的1/5(genome length 1/4)，minUnit就往下調整一個log級數
 	minUnit := math.Pow10(int(math.Floor(math.Log10(float64(len(refSeq) / 4)))))
 	convasWidth := int(math.Ceil(float64(len(refSeq))/minUnit)) * int(minUnit)
-	fmt.Printf("length of %s: %d\n", ref, len(refSeq))
-	fmt.Printf("min unit: %d\n", int(minUnit))
-	fmt.Printf("convasWidth: %d\n", convasWidth)
+
+	fmt.Printf("Reference for SNV site: %s\n", ref)
+	fmt.Printf("Auto adjusted convas length: %d nt\n", convasWidth)
 
 	for _, fa := range seqs {
 		// 計算site map
+		fmt.Printf("%s Creating SNV Histogram: %s", timeStamp(), fa)
 		_, seq := fileformat.ReadSingleFasta(fa)
 		siteMap := make([]bool, len(refSeq))
 		for i := range siteMap {
 			siteMap[i] = false
 		}
-		fmt.Printf("length of %s: %d\n", fa, len(seq))
 		siteMap = snv.SiteMapUpdate(siteMap, refSeq, seq)
-		// debug
-		var counter int
-		for _, b := range siteMap {
-			if b {
-				counter++
-			}
-		}
-		fmt.Printf("snv site counter: %d\n", counter)
-		// debug
 
 		p := &histogram.PlotSites{
 			SitesMap:     siteMap,
@@ -73,4 +67,10 @@ func main() {
 		}
 		p.PlotSites()
 	}
+	fmt.Printf("%s All Done!\n", timeStamp())
+}
+
+func timeStamp() string {
+	t := time.Now()
+	return fmt.Sprintf("[%02v:%02v:%02v]", t.Hour(), t.Minute(), t.Second())
 }
