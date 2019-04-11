@@ -51,6 +51,15 @@ func main() {
 		}
 		fmt.Printf("length of %s: %d\n", fa, len(seq))
 		siteMap = snv.SiteMapUpdate(siteMap, refSeq, seq)
+		// debug
+		var counter int
+		for _, b := range siteMap {
+			if b {
+				counter++
+			}
+		}
+		fmt.Printf("snv site counter: %d\n", counter)
+		// debug
 
 		p := &histogram.PlotSites{
 			SitesMap:     siteMap,
