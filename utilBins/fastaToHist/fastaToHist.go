@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/tigernaxo/ATRIwork/fileformat"
@@ -45,28 +46,34 @@ func main() {
 	fmt.Printf("Reference for SNV site: %s\n", ref)
 	fmt.Printf("Auto adjusted convas length: %d nt\n", convasWidth)
 
+	var wg sync.WaitGroup
 	for _, fa := range seqs {
-		// 計算site map
-		fmt.Printf("%s Creating SNV Histogram: %s.jpg\n", timeStamp(), fa)
-		_, seq := fileformat.ReadSingleFasta(fa)
-		siteMap := make([]bool, len(refSeq))
-		for i := range siteMap {
-			siteMap[i] = false
-		}
-		siteMap = snv.SiteMapUpdate(siteMap, refSeq, seq)
+		go func(f string) {
+			wg.Add(1)
+			// 計算site map
+			fmt.Printf("%s Creating SNV Histogram: %s.jpg\n", timeStamp(), f)
+			_, seq := fileformat.ReadSingleFasta(f)
+			siteMap := make([]bool, len(refSeq))
+			for i := range siteMap {
+				siteMap[i] = false
+			}
+			siteMap = snv.SiteMapUpdate(siteMap, refSeq, seq)
 
-		p := &histogram.PlotSites{
-			SitesMap:     siteMap,
-			RefLen:       len(refSeq),
-			ConvasLen:    convasWidth,
-			Color:        &color.RGBA{255, 0, 0, 255},
-			Bgcolor:      &color.RGBA{0, 155, 155, 255},
-			Intensity:    float64(intensity),
-			OutName:      fa,
-			OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{20, 1920}},
-		}
-		p.PlotSites()
+			p := &histogram.PlotSites{
+				SitesMap:     siteMap,
+				RefLen:       len(refSeq),
+				ConvasLen:    convasWidth,
+				Color:        &color.RGBA{255, 0, 0, 255},
+				Bgcolor:      &color.RGBA{0, 155, 155, 255},
+				Intensity:    float64(intensity),
+				OutName:      f,
+				OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{20, 1920}},
+			}
+			p.PlotSites()
+			wg.Done()
+		}(fa)
 	}
+	wg.Wait()
 	fmt.Printf("%s All Done!\n", timeStamp())
 }
 
