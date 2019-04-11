@@ -26,32 +26,6 @@ func SiteMapToSiteSlice(siteMap []bool) (siteSlice []int) {
 }
 
 // AnnotateAndSave 註解之後直接存檔
-// func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
-
-// 	fmt.Println("Sorting snp sites...")
-// 	sort.Ints(v.Sites)
-
-// 	fmt.Printf("Creating file: [%s]\n", fileName)
-// 	file, err := os.Create(fileName)
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-// 	defer file.Close()
-
-// 	for i := range v.Sites {
-// 		for _, f := range v.FeatureSet.Features {
-// 			if f.Start <= i && f.End >= i {
-// 				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i, f.Name, string(f.Strand), f.Start, f.End)
-// 				_, err := file.WriteString(s)
-// 				if err != nil {
-// 					log.Panic(err)
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
-// AnnotateAndSave 註解之後直接存檔
 func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 
 	fmt.Printf("Creating file: [%s]\n", fileName)
@@ -64,13 +38,13 @@ func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 	for _, feature := range v.FeatureSet.Features {
 		for i := feature.Start - 1; i < feature.End; i++ {
 			// debug
-			if i < 255 {
-				fmt.Printf("siteMap[%d]:%v", i, v.SiteMap[i])
-				fmt.Printf("feature:%v\n", feature)
-			}
+			// if i < 255 {
+			// 	fmt.Printf("siteMap[%d]:%v\t", i, v.SiteMap[i])
+			// 	fmt.Printf("feature:%v\n", feature)
+			// }
 			// debug
 			if v.SiteMap[i] {
-				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i, feature.Name, string(feature.Strand), feature.Start, feature.End)
+				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\n", i+1, feature.Name, string(feature.Strand), feature.Start, feature.End)
 				_, err := file.WriteString(s)
 				if err != nil {
 					log.Panic(err)
