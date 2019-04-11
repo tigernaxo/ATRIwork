@@ -36,8 +36,8 @@ func main() {
 
 	seqs := os.Args[3:]
 	// 只要剩餘的convas佔超過全部的1/5(genome length 1/4)，minUnit就往下調整一個log級數
-	minUnit := math.Pow10(int(math.Floor(math.Log(float64(len(refSeq) / 4)))))
-	convasWidth := int(math.Ceil(float64(len(refSeq)) / minUnit))
+	minUnit := math.Pow10(int(math.Floor(math.Log10(float64(len(refSeq) / 4)))))
+	convasWidth := int(math.Ceil(float64(len(refSeq))/minUnit)) * int(minUnit)
 	fmt.Printf("length of %s: %d\n", ref, len(refSeq))
 	fmt.Printf("min unit: %d\n", int(minUnit))
 	fmt.Printf("convasWidth: %d\n", convasWidth)
