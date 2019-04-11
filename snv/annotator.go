@@ -28,7 +28,6 @@ func SiteMapToSiteSlice(siteMap []bool) (siteSlice []int) {
 // AnnotateAndSave 註解之後直接存檔
 func (v *SiteAnnotator) AnnotateAndSave(fileName string) {
 
-	fmt.Printf("Creating file: [%s]\n", fileName)
 	file, err := os.Create(fileName)
 	if err != nil {
 		log.Panic(err)

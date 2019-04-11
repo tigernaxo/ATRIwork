@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/tigernaxo/ATRIwork/fileformat"
 	// github.com/tigernaxo/ATRIwork/histogram
@@ -41,23 +42,25 @@ func main() {
 	for i := range siteMap {
 		siteMap[i] = false
 	}
-	// TODO:不應該用[][]byte
-	// 應該seq比對完就丟棄，效能才會好
-	// 但是這樣就不能用SiteMapAllToAll
-	// 應該寫一個SiteMapUpdate(siteMap *[]bool, ref *[]byte, seq *[]byte)(newSiteMap []bool)
-	// library裡面都是傳值呼叫，也要修改
+
 	for _, fa := range fastas {
-		fmt.Printf("Log: Reading file: %s\n", fa)
+		t := time.Now()
+		fmt.Printf("[%02v:%02v:%02v] ", t.Hour(), t.Minute(), t.Second())
+		fmt.Printf("Reading %s\n", fa)
 		_, seq := fileformat.ReadSingleFasta(fa)
 		siteMap = snv.SiteMapUpdate(siteMap, ref, seq)
 	}
 
-	fmt.Printf("Log: Extracting gene from GFF...\n")
+	t := time.Now()
+	fmt.Printf("[%02v:%02v:%02v] ", t.Hour(), t.Minute(), t.Second())
+	fmt.Printf("Extracting gene from %s...\n", gff)
 	a := snv.SiteAnnotator{
 		SiteMap:    siteMap,
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 
-	fmt.Printf("Log: Annotating SNV ...\n")
+	t = time.Now()
+	fmt.Printf("[%02v:%02v:%02v] ", t.Hour(), t.Minute(), t.Second())
+	fmt.Printf("Annotating SNV ...\n")
 	a.AnnotateAndSave("annotatedSNV.tsv")
 }

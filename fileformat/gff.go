@@ -2,7 +2,6 @@ package fileformat
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -26,7 +25,6 @@ type FeatureSet struct {
 
 // FeatureSetFromGFF 從GFF3裡面抽取特徵的範圍(start, end)、正負股、名稱
 func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
-	fmt.Printf("Extracting feature class [%s] from file [%s]\n", featureClass, gffFile)
 	fs := FeatureSet{
 		Class:    featureClass,
 		Features: make([]*Feature, 0, 100000),
