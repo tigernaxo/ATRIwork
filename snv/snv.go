@@ -29,13 +29,6 @@ func SiteMapUpdate(siteMap []bool, ref []byte, seq []byte) (newSiteMap []bool) {
 			siteMap[i] = true
 		}
 	}
-	// var n int
-	// for _, b := range siteMap {
-	// 	if b {
-	// 		n++
-	// 	}
-	// }
-	// fmt.Printf("snv number: %d\n", n)
 	return siteMap
 }
 

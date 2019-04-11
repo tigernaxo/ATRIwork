@@ -3,7 +3,7 @@ package histogram
 import (
 	"image"
 	"image/color"
-	"image/jpeg"
+	"image/png"
 	"log"
 	"math"
 	"os"
@@ -18,6 +18,7 @@ type PlotSites struct {
 	ConvasLen    int
 	Color        color.Color
 	Bgcolor      color.Color
+	Tailcolor    color.Color
 	Intensity    float64
 	OutName      string
 	OutDimension image.Rectangle
@@ -33,7 +34,7 @@ func (p *PlotSites) PlotSites() {
 	}
 
 	// Create jpg file to output
-	file, err := os.Create(p.OutName + ".jpg")
+	file, err := os.Create(p.OutName + ".png")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,9 +42,6 @@ func (p *PlotSites) PlotSites() {
 
 	// Create an image and draw bgcolor in genome range
 	rgba := image.NewRGBA(image.Rect(0, 0, p.ConvasLen, 1))
-	for i := 0; i < p.RefLen; i++ {
-		rgba.Set(i, 0, p.Bgcolor)
-	}
 
 	for i, b := range p.SitesMap {
 		if b {
@@ -52,10 +50,15 @@ func (p *PlotSites) PlotSites() {
 			for j := start; j <= end; j++ {
 				rgba.Set(i, 0, p.Color)
 			}
+		} else {
+			rgba.Set(i, 0, p.Bgcolor)
 		}
+	}
+	for i := len(p.SitesMap); i < p.ConvasLen; i++ {
+		rgba.Set(i, 0, p.Tailcolor)
 	}
 
 	// Resize and save
 	resizedImg := resize.Resize(uint(p.OutDimension.Max.Y), uint(p.OutDimension.Max.X), rgba, resize.NearestNeighbor)
-	jpeg.Encode(file, resizedImg, nil) //将image信息存入文件中
+	png.Encode(file, resizedImg) //将image信息存入文件中
 }
