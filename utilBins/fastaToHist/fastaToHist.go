@@ -64,7 +64,7 @@ func main() {
 			Tailcolor:    &color.RGBA{176, 190, 197, 255},
 			Intensity:    float64(intensity),
 			OutName:      fa,
-			OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{20, 1920}},
+			OutDimension: image.Rectangle{image.Point{0, 0}, image.Point{5, 7680}},
 		}
 		p.PlotSites()
 	}
