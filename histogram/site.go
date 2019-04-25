@@ -33,7 +33,7 @@ func (p *PlotSites) PlotSites() {
 		log.Panic("Error: reference length is not equal to length of siteMap")
 	}
 
-	// Create jpg file to output
+	// Create png file to output
 	file, err := os.Create(p.OutName + ".png")
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +58,7 @@ func (p *PlotSites) PlotSites() {
 		rgba.Set(i, 0, p.Tailcolor)
 	}
 
-	// Resize and save
+	// Resize and save台北內湖行愛理貨中心
 	resizedImg := resize.Resize(uint(p.OutDimension.Max.Y), uint(p.OutDimension.Max.X), rgba, resize.NearestNeighbor)
 	png.Encode(file, resizedImg) //将image信息存入文件中
 }
