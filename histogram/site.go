@@ -58,7 +58,7 @@ func (p *PlotSites) PlotSites() {
 		rgba.Set(i, 0, p.Tailcolor)
 	}
 
-	// Resize and save台北內湖行愛理貨中心
+	// Resize and save
 	resizedImg := resize.Resize(uint(p.OutDimension.Max.Y), uint(p.OutDimension.Max.X), rgba, resize.NearestNeighbor)
 	png.Encode(file, resizedImg) //将image信息存入文件中
 }
