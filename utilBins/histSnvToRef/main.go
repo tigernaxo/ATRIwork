@@ -13,6 +13,7 @@ import (
 var snvColor = &color.RGBA{255, 0, 0, 255}
 var genomeColor = &color.RGBA{0, 0, 0, 255}
 
+// 重要：應該改成每次都resize塞到final Image，全部展開會out of Memory
 func main() {
 	outHist := "histogram.png"
 	outScale := "scale.png"

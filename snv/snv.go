@@ -24,7 +24,7 @@ func SiteMapUpdate(siteMap []bool, ref []byte, seq []byte) (newSiteMap []bool) {
 	}
 
 	// 如果數字不同就true siteMap
-	for i := range ref {
+	for i := range seq {
 		if !siteMap[i] && (ref[i]-seq[i])%32 != 0 {
 			siteMap[i] = true
 		}
