@@ -14,30 +14,54 @@ import (
 )
 
 // Draw histogram
-// 重要：應該改成每次都resize塞到final Image，全部展開會out of Memory
-func drawHist(histHeight, gapHeight, convasWidth, convasHeight int, ref []byte, fileList []string) *image.RGBA {
-	convas := image.NewRGBA(image.Rectangle{
+// 重要：應該改成每次都resize塞到final Image並釋放記憶體，全部展開會造成out of Memory
+func drawHist2(gapRatio float64, convasWidth int, ref []byte, fileList []string) *image.RGBA {
+	unitConvas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
-		image.Point{convasWidth, convasHeight},
+		image.Point{convasWidth, 1},
 	})
-	startY := 0
-	for _, fa := range fileList {
-		fmt.Printf("%s Creating SNV Histogram: %s\n", timeStamp(), fa)
-
+	shinkedConvas := image.NewRGBA(image.Rectangle{
+		image.Point{0, 0},
+		image.Point{1920, 10},
+	})
+	gapHeight := int(float64(10) * gapRatio)
+	finalConvas := image.NewRGBA(image.Rectangle{
+		image.Point{0, 0},
+		image.Point{1920, len(fileList)*10 + gapHeight*(len(fileList)-1)},
+	})
+	anchorY := 0
+	siteMap := mkSiteMap(len(ref), false)
+	for i, fa := range fileList {
 		_, seq := fileformat.ReadSingleFasta(fa)
-		siteMap := mkSiteMap(len(ref), false)
+		for i := range siteMap {
+			siteMap[i] = false
+		}
 		siteMap = snv.SiteMapUpdate(siteMap, ref, seq)
+		if len(siteMap) > convasWidth {
+			log.Panicf("[Error] siteMap is larger then convasWidth \n")
+		}
 
+		// fill histogram
 		for x := 0; x < len(siteMap); x++ {
 			if siteMap[x] {
-				for y := startY; y < startY+histHeight; y++ {
-					convas.SetRGBA(x, y, *snvColor)
-				}
+				unitConvas.SetRGBA(x, 0, *snvColor)
 			}
 		}
-		startY = startY + histHeight + gapHeight
+		// resize to 1920 width
+		shinkedConvas = resize.Resize(1920, 10, unitConvas, resize.NearestNeighbor).(*image.RGBA)
+		for x := 0; x < 1920; x++ {
+			for y := anchorY; y < anchorY+10; y++ {
+				finalConvas.SetRGBA(x, y, shinkedConvas.At(x, 0).(color.RGBA))
+			}
+		}
+		anchorY += 10
+		// Draw shinkedConvas on filnalConvas
+		if i+1 != len(fileList) {
+			// Draw(Skip) gap
+			anchorY += gapHeight
+		}
 	}
-	return convas
+	return finalConvas
 }
 func drawGenome(genomeLength, convasWidth, outHeight, outWidth int) *image.RGBA {
 	convas := image.NewRGBA(image.Rectangle{
