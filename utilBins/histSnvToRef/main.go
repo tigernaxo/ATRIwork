@@ -30,7 +30,7 @@ func main() {
 	convasWidth := int(math.Ceil(float64(len(refSeq))/minUnit)) * int(minUnit)
 
 	// Draw histogram
-	convas := drawHist2(conf.gapRatio, convasWidth, refSeq, conf.fileList)
+	convas := drawHist(conf.gapRatio, convasWidth, refSeq, conf.fileList)
 	resizeThenSavePng(convas, uint(1920), uint(1080), conf.outDir+"/"+outHist)
 
 	// Draw genome
