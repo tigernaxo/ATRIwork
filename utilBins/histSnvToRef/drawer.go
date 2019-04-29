@@ -32,9 +32,7 @@ func drawHist(gapRatio float64, convasWidth int, ref []byte, fileList []string) 
 	siteMap := mkSiteMap(len(ref), false)
 	for i, fa := range fileList {
 		_, seq := fileformat.ReadSingleFasta(fa)
-		for i := range siteMap {
-			siteMap[i] = false
-		}
+		setBool(siteMap, false)
 		siteMap = snv.SiteMapUpdate(siteMap, ref, seq)
 		if len(siteMap) > convasWidth {
 			log.Panicf("[Error] siteMap is larger then convasWidth \n")
@@ -144,4 +142,9 @@ func mkSiteMap(len int, fill bool) []bool {
 		siteMap[i] = fill
 	}
 	return siteMap
+}
+func setBool(a []bool, b bool) {
+	for i := range a {
+		a[i] = b
+	}
 }
