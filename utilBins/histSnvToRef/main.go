@@ -19,6 +19,10 @@ func main() {
 	outGenome := "genome.png"
 	// histHeight := 20
 
+	if len(os.Args) == 1 {
+		fmt.Println("Usage example:")
+		fmt.Printf("\t%s ./config_file\n", os.Args[0])
+	}
 	conf := newConfig(os.Args[1])
 
 	// gapHeight := int(float64(histHeight) * conf.gapRatio)
@@ -38,7 +42,8 @@ func main() {
 	resizeThenSavePng(convas, uint(1920), uint(20), conf.outDir+"/"+outGenome)
 
 	// Draw Scale bar
-	convas = drawScale(int(minUnit), convasWidth)
+	// convas = drawScale(int(minUnit), convasWidth)
+	convas = drawScale(int(minUnit), convasWidth, 1920)
 	savePng(convas, conf.outDir+"/"+outScale)
 
 	fmt.Printf("%s All Done\n", timeStamp())

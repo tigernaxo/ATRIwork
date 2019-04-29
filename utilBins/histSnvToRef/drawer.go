@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -73,57 +72,60 @@ func drawGenome(genomeLength, convasWidth, outHeight, outWidth int) *image.RGBA 
 	}
 	return convas
 }
-func drawScale(unit, convasWidth int) *image.RGBA {
-	// 目標是在1920寬的圖上mainUnit有3px subUnit有1px
-	scaleAxisPx := 3
-	scaleMainPx := 3
-	scaleMainHeight := 10
-	// scaleSubPx := 1
-	scaleSubHeight := 5
-	finalWidth := 1920
-	finalHeight := scaleMainHeight + scaleAxisPx + scaleSubHeight
-	scaleColor := &color.RGBA{0, 0, 0, 255}
 
-	// subUnit := int(float64(unit) / 10.)
+// Scale ss
+type Scale struct {
+	Width  int
+	Height int
+}
+
+func drawScale(unit, totalLen, convasLen int) *image.RGBA {
+	convasWidth := 1920
+	scaleColor := &color.RGBA{0, 0, 0, 255}
+	mainScale := Scale{3, 10}
+	subScale := Scale{1, 5}
+	middleLinePix := 3
 	convas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
-		image.Point{finalWidth, finalHeight},
+		image.Point{convasWidth + mainScale.Width, middleLinePix + mainScale.Height + subScale.Height},
 	})
-	// Draw Axis
-	for x := 0; x < finalWidth; x++ {
-		for y := scaleMainHeight; y < scaleMainHeight+scaleAxisPx; y++ {
-			convas.SetRGBA(x, y, *scaleColor)
-		}
+
+	recTofill := image.Rectangle{}
+	// 繪製mainScale
+	recTofill.Min.Y = 0
+	recTofill.Max.Y = recTofill.Min.Y + mainScale.Height
+	for i := 0; i <= totalLen/unit; i++ {
+		recTofill.Min.X = int(float64(i) * float64(unit) * (float64(convasLen) / float64(totalLen)))
+		recTofill.Max.X = recTofill.Min.X + mainScale.Width
+		fillRect(recTofill, scaleColor, *convas)
 	}
-	// Draw main bar
-	for x := 0; x < scaleMainPx; x++ {
-		for y := 0; y < scaleMainHeight; y++ {
-			convas.SetRGBA(x, y, *scaleColor)
-		}
+
+	// 繪製subScale
+	subUnit := float64(unit) / float64(10)
+	recTofill.Min.Y = mainScale.Height + middleLinePix
+	recTofill.Max.Y = recTofill.Min.Y + subScale.Height
+	for i := 0; i <= int(totalLen/unit)*10; i++ {
+		recTofill.Min.X = int(float64(i) * subUnit * (float64(convasLen) / float64(totalLen)))
+		recTofill.Max.X = recTofill.Min.X + subScale.Width
+		fillRect(recTofill, scaleColor, *convas)
 	}
-	for x := finalWidth - 3; x < finalWidth; x++ {
-		for y := 0; y < scaleMainHeight; y++ {
-			convas.SetRGBA(x, y, *scaleColor)
-		}
-	}
-	mainStep := int(float64(finalWidth) / (float64(convasWidth) / float64(unit)))
-	fmt.Println(mainStep)
-	// subStep := int(float64(finalWidth) / (float64(convasWidth) / (float64(unit) / float64(10))))
-	for x := mainStep; x < mainStep*(convasWidth/unit); x = x + mainStep {
-		for y := 0; y < scaleMainHeight; y++ {
-			convas.SetRGBA(x-1, y, *scaleColor)
-			convas.SetRGBA(x, y, *scaleColor)
-			convas.SetRGBA(x+1, y, *scaleColor)
-		}
-	}
-	// fmt.Println(subStep)
-	// for x := subStep; x < subStep*(convasWidth/(unit/10)); x = x + subStep {
-	// 	for y := scaleMainHeight + scaleAxisPx; y < finalHeight; y++ {
-	// 		convas.SetRGBA(x, y, *scaleColor)
-	// 	}
-	// }
+	// 繪製middleLine
+	recTofill.Min.X = 0
+	recTofill.Max.X = convas.Bounds().Max.X
+	recTofill.Min.Y = mainScale.Height
+	recTofill.Max.Y = recTofill.Min.Y + middleLinePix
+	fillRect(recTofill, scaleColor, *convas)
+
 	return convas
 }
+func fillRect(rec image.Rectangle, c *color.RGBA, img image.RGBA) {
+	for x := rec.Min.X; x < rec.Max.X; x++ {
+		for y := rec.Min.Y; y < rec.Max.Y; y++ {
+			img.SetRGBA(x, y, *c)
+		}
+	}
+}
+
 func savePng(img image.Image, outPath string) {
 	outImage, err := os.Create(outPath)
 	if err != nil {
