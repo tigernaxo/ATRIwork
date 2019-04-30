@@ -22,6 +22,7 @@ func main() {
 	if len(os.Args) == 1 {
 		fmt.Println("Usage example:")
 		fmt.Printf("\t%s ./config_file\n", os.Args[0])
+		os.Exit(0)
 	}
 	conf := newConfig(os.Args[1])
 
