@@ -17,6 +17,10 @@ import (
 // 1.annotation tsv
 
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("Usage:")
+		fmt.Printf("\t%s reference.gff seq1.fa seq2.fa [seq3.fa ...]\n", os.Args[0])
+	}
 	gff := os.Args[1]
 	fmt.Printf("Reading file: %s\n", os.Args[2])
 	_, ref := fileformat.ReadSingleFasta(os.Args[2])
