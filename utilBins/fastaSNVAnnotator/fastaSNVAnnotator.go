@@ -71,6 +71,33 @@ func main() {
 			}
 		}
 	}
+	// Output alignment
+	fmt.Printf("%s Outputing %s\n", timeStamp(), "alignment")
+	f, err := os.Create("snv.aln")
+	logErr(err)
+	defer f.Close()
+
+	aln := make([]byte, 0, logBoolCount(showMap, true))
+	for _, fa := range fastas {
+		id, seq := fileformat.ReadSingleFasta(fa)
+		// write id
+		_, err := f.WriteString(">" + id + "\n")
+		logErr(err)
+
+		// write single alignment
+		for i, c := range seq {
+			if showMap[i] {
+				aln = append(aln, c)
+			}
+		}
+		_, err = f.Write(aln)
+		logErr(err)
+		_, err = f.WriteString("\n")
+		logErr(err)
+
+		// empty alignment
+		aln = aln[:0]
+	}
 
 	// Program finished
 	fmt.Printf("%s All Finished!!\n", timeStamp())

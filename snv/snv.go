@@ -55,7 +55,6 @@ func (siteInfo *SiteInfo) AccumulateSNV(seq []byte) {
 	siteInfo.seqCount++
 	if siteInfo.seqCount == 1 {
 		siteInfo.firstSeq = seq
-		return
 	}
 	// Panic if seq length > reference length
 	if len(siteInfo.RefSeq) < len(seq) {
@@ -63,8 +62,10 @@ func (siteInfo *SiteInfo) AccumulateSNV(seq []byte) {
 	}
 	for i, c := range seq {
 		// Update SnvMap
-		if !IsEqualAlphabet(c, siteInfo.firstSeq[i]) {
-			siteInfo.SnvMap[i] = true
+		if siteInfo.seqCount != 1 {
+			if !IsEqualAlphabet(c, siteInfo.firstSeq[i]) {
+				siteInfo.SnvMap[i] = true
+			}
 		}
 		// Update NtCount
 		for nt, nta := range siteInfo.NtCount {
