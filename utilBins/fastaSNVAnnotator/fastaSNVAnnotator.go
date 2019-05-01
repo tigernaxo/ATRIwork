@@ -10,13 +10,6 @@ import (
 	"github.com/tigernaxo/ATRIwork/snv"
 )
 
-// Input:
-// 1. ref gff
-// 2. ...seqs
-
-// Output
-// 1.annotation tsv
-
 func main() {
 	if len(os.Args) < 5 {
 		fmt.Println("Usage:")
@@ -72,10 +65,12 @@ func main() {
 	}
 	fmt.Printf("%s All Finished!!\n", timeStamp())
 }
+
 func timeStamp() string {
 	t := time.Now()
 	return fmt.Sprintf("[%02v:%02v:%02v]", t.Hour(), t.Minute(), t.Second())
 }
+
 func logErr(e error) {
 	if e != nil {
 		log.Panic(e)
