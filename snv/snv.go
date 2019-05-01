@@ -97,6 +97,7 @@ func (siteInfo *SiteInfo) SnvmapAndMask(outMap []bool) {
 	}
 }
 
+// IsAlphabet tell you where c is a alphbet
 func IsAlphabet(c byte) bool {
 	if 65 <= c && c <= 122 {
 		if c <= 90 || c >= 97 {
@@ -105,6 +106,8 @@ func IsAlphabet(c byte) bool {
 	}
 	return false
 }
+
+// IsEqualAlphabet ignore and tell you where two character is same alphabet
 func IsEqualAlphabet(c, d byte) bool {
 	if (c-d)%32 == 0 {
 		if IsAlphabet(c) && IsAlphabet(d) {
@@ -114,7 +117,7 @@ func IsEqualAlphabet(c, d byte) bool {
 	return false
 }
 
-// ==============old=========================
+// ==============old tools=========================
 
 // UpdateCharMap update charMap, set true when site's char belong charSet
 func UpdateCharMap(charMap []bool, seq []byte, charSet []byte) {
