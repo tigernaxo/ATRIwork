@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 // 1.annotation tsv
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 5 {
 		fmt.Println("Usage:")
 		fmt.Printf("\t%s reference.gff ref.fa seq1.fa seq2.fa [seq3.fa ...]\n", os.Args[0])
 		os.Exit(0)
@@ -41,22 +42,45 @@ func main() {
 	siteInfo.SnvmapAndMask(showMap)
 
 	fmt.Printf("%s Extracting gene from %s...\n", timeStamp(), gff)
-	a := snv.SiteAnnotator{
-		SiteMap:    showMap,
-		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
-	}
+	var geneSet *fileformat.FeatureSet
+	geneSet = fileformat.FeatureSetFromGFF("gene", gff)
+
+	file, err := os.Create("annotated.tsv")
+	logErr(err)
+	defer file.Close()
 
 	fmt.Printf("%s Annotating SNV ...\n", timeStamp())
-	a.AnnotateAndSave("annotatedSNV.tsv")
 
-	fmt.Printf("%s Finished!\n", timeStamp())
+	// Column Title
+	s := fmt.Sprintf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+		"Site", "FeatureName", "Strand", "Start", "End",
+		"A_count", "T_count", "C_count", "G_count", "RefNt")
+	_, err = file.WriteString(s)
+	logErr(err)
+
+	logErr(err)
+	for _, feature := range geneSet.Features {
+		for i := feature.Start - 1; i < feature.End; i++ {
+			if showMap[i] {
+				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%c\n",
+					i+1, feature.Name, string(feature.Strand), feature.Start, feature.End,
+					siteInfo.NtCount['A'][i], siteInfo.NtCount['T'][i], siteInfo.NtCount['C'][i], siteInfo.NtCount['G'][i], siteInfo.RefSeq[i])
+				_, err := file.WriteString(s)
+				logErr(err)
+			}
+		}
+	}
+	fmt.Printf("%s All Finished!!\n", timeStamp())
 }
-
 func timeStamp() string {
 	t := time.Now()
 	return fmt.Sprintf("[%02v:%02v:%02v]", t.Hour(), t.Minute(), t.Second())
 }
-
+func logErr(e error) {
+	if e != nil {
+		log.Panic(e)
+	}
+}
 func logBoolCount(name string, ba []bool, checkB bool) {
 	count := 0
 	for _, b := range ba {
