@@ -27,12 +27,10 @@ type FeatureSet struct {
 func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 	fs := FeatureSet{
 		Class:    featureClass,
-		Features: make([]*Feature, 0, 100000),
+		Features: make([]*Feature, 0, 10000),
 	}
 	f, err := os.Open(gffFile)
-	if err != nil {
-		log.Panic(err)
-	}
+	logErr(err)
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
@@ -41,13 +39,9 @@ func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 		lineArr := strings.Split(scanner.Text(), "\t")
 		if !strings.HasPrefix(lineArr[0], "#") && len(lineArr) == 9 && lineArr[2] == featureClass {
 			start, err := strconv.Atoi(lineArr[3])
-			if err != nil {
-				log.Panic(err)
-			}
+			logErr(err)
 			end, err := strconv.Atoi(lineArr[4])
-			if err != nil {
-				log.Panic(err)
-			}
+			logErr(err)
 			fs.Features = append(fs.Features, &Feature{
 				Start:  start,
 				End:    end,
@@ -57,4 +51,10 @@ func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 		}
 	}
 	return &fs
+}
+
+func logErr(e error) {
+	if e != nil {
+		log.Panic(e)
+	}
 }

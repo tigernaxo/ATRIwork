@@ -19,30 +19,30 @@ import (
 func main() {
 	if len(os.Args) < 3 {
 		fmt.Println("Usage:")
-		fmt.Printf("\t%s reference.gff seq1.fa seq2.fa [seq3.fa ...]\n", os.Args[0])
+		fmt.Printf("\t%s reference.gff ref.fa seq1.fa seq2.fa [seq3.fa ...]\n", os.Args[0])
 		os.Exit(0)
 	}
 	gff := os.Args[1]
-	fmt.Printf("Reading file: %s\n", os.Args[2])
-	_, ref := fileformat.ReadSingleFasta(os.Args[2])
-	fastas := os.Args[3:]
 	fmt.Printf("Reference GFF: %s\n", gff)
+	fmt.Printf("Reading file as reference: %s\n", os.Args[2])
+	_, ref := fileformat.ReadSingleFasta(os.Args[2])
+
+	fastas := os.Args[3:]
 	fmt.Printf("Sequence number: %d\n", len(fastas))
 
-	siteMap := make([]bool, len(ref))
-	for i := range siteMap {
-		siteMap[i] = false
-	}
-
+	siteInfo := snv.NewSiteInfo(ref, []byte{'A', 'T', 'C', 'G'}, []byte{'N'})
+	var seq []byte
 	for _, fa := range fastas {
 		fmt.Printf("%s Reading %s\n", timeStamp(), fa)
-		_, seq := fileformat.ReadSingleFasta(fa)
-		siteMap = snv.SiteMapUpdate(siteMap, ref, seq)
+		_, seq = fileformat.ReadSingleFasta(fa)
+		siteInfo.AccumulateSNV(seq)
 	}
+	showMap := make([]bool, len(ref))
+	siteInfo.SnvmapAndMask(showMap)
 
 	fmt.Printf("%s Extracting gene from %s...\n", timeStamp(), gff)
 	a := snv.SiteAnnotator{
-		SiteMap:    siteMap,
+		SiteMap:    showMap,
 		FeatureSet: fileformat.FeatureSetFromGFF("gene", gff),
 	}
 
@@ -55,4 +55,14 @@ func main() {
 func timeStamp() string {
 	t := time.Now()
 	return fmt.Sprintf("[%02v:%02v:%02v]", t.Hour(), t.Minute(), t.Second())
+}
+
+func logBoolCount(name string, ba []bool, checkB bool) {
+	count := 0
+	for _, b := range ba {
+		if b == checkB {
+			count++
+		}
+	}
+	fmt.Printf("%s %v count : %d\n", name, checkB, count)
 }
