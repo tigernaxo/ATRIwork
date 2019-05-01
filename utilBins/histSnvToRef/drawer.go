@@ -13,7 +13,6 @@ import (
 )
 
 // Draw histogram
-// 重要：應該改成每次都resize塞到final Image並釋放記憶體，全部展開會造成out of Memory
 func drawHist(gapRatio float64, convasWidth int, ref []byte, fileList []string) *image.RGBA {
 	unitConvas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
