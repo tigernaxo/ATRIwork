@@ -28,12 +28,31 @@ func main() {
 	fmt.Printf("Sequence number: %d\n", len(fastas))
 
 	// Calculate each snv siteinfo
-	siteInfo := snv.NewSiteInfo(ref, []byte{'A', 'T', 'C', 'G'}, []byte{'N', '-'})
+	siteInfo := snv.NewInfo(ref, []byte{'N', '-'}, false)
+
+	// Create nt counter
+	ntToCount := []byte{'A', 'T', 'C', 'G'}
+	ntCount := make(map[byte][]uint8)
+	for _, nt := range ntToCount {
+		ntCount[nt] = make([]uint8, len(ref))
+		for i := range ntCount[nt] {
+			ntCount[nt][i] = 0
+		}
+	}
+
 	var seq []byte
 	for _, fa := range fastas {
 		fmt.Printf("%s Reading %s\n", timeStamp(), fa)
 		_, seq = fileformat.ReadSingleFasta(fa)
-		siteInfo.AccumulateSNV(seq)
+		siteInfo.AccumulateSeqSNV(seq)
+		// Count site nt frequency
+		for i, nt := range seq {
+			for _, c := range ntToCount {
+				if snv.IsEqualAlphabet(c, nt) {
+					ntCount[c][i]++
+				}
+			}
+		}
 	}
 
 	// Decide show site
@@ -65,7 +84,7 @@ func main() {
 			if showMap[i] {
 				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%c\n",
 					i+1, feature.Name, string(feature.Strand), feature.Start, feature.End,
-					siteInfo.NtCount['A'][i], siteInfo.NtCount['T'][i], siteInfo.NtCount['C'][i], siteInfo.NtCount['G'][i], siteInfo.RefSeq[i])
+					ntCount['A'][i], ntCount['T'][i], ntCount['C'][i], ntCount['G'][i], siteInfo.RefSeq[i])
 				_, err := file.WriteString(s)
 				logErr(err)
 			}
