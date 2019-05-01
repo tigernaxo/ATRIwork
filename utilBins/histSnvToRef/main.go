@@ -10,7 +10,7 @@ import (
 	"github.com/tigernaxo/ATRIwork/fileformat"
 )
 
-var snvColor = &color.RGBA{255, 0, 0, 255}
+var snvColor = &color.RGBA{0, 0, 0, 255}
 var genomeColor = &color.RGBA{0, 0, 0, 255}
 
 func main() {
@@ -35,7 +35,8 @@ func main() {
 	convasWidth := int(math.Ceil(float64(len(refSeq))/minUnit)) * int(minUnit)
 
 	// Draw histogram
-	convas := drawHist(conf.gapRatio, convasWidth, refSeq, conf.fileList)
+	convas := drawHist2(conf)
+
 	resizeThenSavePng(convas, uint(1920), uint(1080), conf.outDir+"/"+outHist)
 
 	// Draw genome
@@ -43,7 +44,6 @@ func main() {
 	resizeThenSavePng(convas, uint(1920), uint(20), conf.outDir+"/"+outGenome)
 
 	// Draw Scale bar
-	// convas = drawScale(int(minUnit), convasWidth)
 	convas = drawScale(int(minUnit), convasWidth, 1920)
 	savePng(convas, conf.outDir+"/"+outScale)
 

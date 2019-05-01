@@ -57,11 +57,12 @@ func (s *Info) AccumulateSeqSNV(seq []byte) {
 	}
 	for i, c := range seq {
 		// Update SnvMap
-		if s.seqCount != 1 {
+		if s.seqCount != 1 || s.snvToRef {
 			if !IsEqualAlphabet(c, s.realRef[i]) {
 				s.SnvMap[i] = true
 			}
 		}
+		// Accumulate exlude Site
 		for _, ex := range s.ExcludeSiteIfAnySampleContain {
 			if IsEqualAlphabet(c, ex) {
 				s.ShowMask[i] = false
@@ -103,4 +104,16 @@ func IsEqualAlphabet(c, d byte) bool {
 		}
 	}
 	return false
+}
+
+// UpdateSNVMap update snv
+func UpdateSNVMap(snvMap []bool, ref []byte, seq []byte) {
+	if len(ref) < len(seq) {
+		log.Panicf("[Error] reference length is shoter!\n")
+	}
+	for i, nt := range seq {
+		if !IsEqualAlphabet(nt, ref[i]) {
+			snvMap[i] = true
+		}
+	}
 }

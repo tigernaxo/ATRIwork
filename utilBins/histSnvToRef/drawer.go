@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"image/png"
 	"log"
+	"math"
 	"os"
 
 	"github.com/nfnt/resize"
@@ -12,8 +13,21 @@ import (
 	"github.com/tigernaxo/ATRIwork/snv"
 )
 
-// Draw histogram
-func drawHist(gapRatio float64, convasWidth int, ref []byte, fileList []string) *image.RGBA {
+func drawHist2(conf *config) *image.RGBA {
+	_, ref := fileformat.ReadSingleFasta(conf.refSeq)
+	// 只要剩餘的convas佔超過全部的1/5(genome length 1/4)，minUnit就往下調整一個log級數
+	minUnit := math.Pow10(int(math.Floor(math.Log10(float64(len(ref) / 4)))))
+	gapRatio := conf.gapRatio
+	fileList := conf.fileList
+	convasWidth := int(math.Ceil(float64(len(ref))/minUnit)) * int(minUnit)
+
+	// get showMap
+	info := snv.NewInfo(ref, []byte{'N', '-'}, false)
+	for _, fa := range fileList {
+		_, seq := fileformat.ReadSingleFasta(fa)
+		info.AccumulateSeqSNV(seq)
+	}
+	// pre setting convas
 	unitConvas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
 		image.Point{convasWidth, 1},
@@ -27,20 +41,24 @@ func drawHist(gapRatio float64, convasWidth int, ref []byte, fileList []string) 
 		image.Point{0, 0},
 		image.Point{1920, len(fileList)*10 + gapHeight*(len(fileList)-1)},
 	})
+
+	// drawing
 	anchorY := 0
-	siteMap := mkSiteMap(len(ref), false)
+	snvMap := mkSiteMap(len(ref), false)
 	for i, fa := range fileList {
 		_, seq := fileformat.ReadSingleFasta(fa)
-		setBool(siteMap, false)
-		snv.UpdateSNVMap(siteMap, ref, seq)
-		if len(siteMap) > convasWidth {
-			log.Panicf("[Error] siteMap is larger then convasWidth \n")
+		setBool(snvMap, false)
+		snv.UpdateSNVMap(snvMap, ref, seq)
+		if len(snvMap) > convasWidth {
+			log.Panicf("[Error] snvMap is larger then convasWidth \n")
 		}
 
 		// fill histogram
-		for x := 0; x < len(siteMap); x++ {
-			if siteMap[x] {
-				unitConvas.SetRGBA(x, 0, *snvColor)
+		for x := 0; x < len(snvMap); x++ {
+			if snvMap[x] && info.ShowMask[x] {
+				for i := maxInt(0, x-int((conf.intensity-1.0)/2.0)); i < minInt(len(snvMap), x+int((conf.intensity-1.0)/2.0)); i++ {
+					unitConvas.SetRGBA(i, 0, *snvColor)
+				}
 			}
 		}
 		// resize to 1920 width
@@ -59,6 +77,20 @@ func drawHist(gapRatio float64, convasWidth int, ref []byte, fileList []string) 
 	}
 	return finalConvas
 }
+
+func minInt(i, j int) int {
+	if i < j {
+		return i
+	}
+	return j
+}
+func maxInt(i, j int) int {
+	if i > j {
+		return i
+	}
+	return j
+}
+
 func drawGenome(genomeLength, convasWidth, outHeight, outWidth int) *image.RGBA {
 	convas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
