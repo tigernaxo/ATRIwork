@@ -57,9 +57,6 @@ func main() {
 		if i == 0 {
 			_, ref = fileformat.ReadSingleFasta(fa)
 		}
-		// snv.UpdateSNVMap(snvMap, ref, seq)
-		// snv.UpdateShowMapByMaskChar(showMap, seq, maskChar)
-		// snv.UpdateSiteNtCount(ntCounter, seq)
 		snv.UpdateSNVMapShowMapSiteCount(ref, seq, maskChar, snvMap, showMap, ntCounter)
 	}
 
