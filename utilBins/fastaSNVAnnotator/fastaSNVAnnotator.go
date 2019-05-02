@@ -6,8 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/tigernaxo/ATRIwork/fileformat"
 	"github.com/tigernaxo/ATRIwork/snv"
+
+	"github.com/tigernaxo/ATRIwork/fileformat"
 )
 
 func main() {
@@ -21,44 +22,49 @@ func main() {
 	gff := os.Args[1]
 	fmt.Printf("Reference GFF: %s\n", gff)
 	fmt.Printf("Reading file as reference: %s\n", os.Args[2])
-	_, ref := fileformat.ReadSingleFasta(os.Args[2])
+	// Using ref length as map length
+	_, r := fileformat.ReadSingleFasta(os.Args[2])
+	mapLen := len(r)
+	r = nil
+
+	// Using first seq as ref (not reference fasta)
+	// _, ref := fileformat.ReadSingleFasta(os.Args[3])
 
 	// set sequence fasta
 	fastas := os.Args[3:]
 	fmt.Printf("Sequence number: %d\n", len(fastas))
 
 	// Calculate each snv siteinfo
-	siteInfo := snv.NewInfo(ref, []byte{'N', '-'}, false)
-
-	// Create nt counter
+	maskChar := []byte{'N', '-'}
 	ntToCount := []byte{'A', 'T', 'C', 'G'}
-	ntCount := make(map[byte][]uint8)
+	ntCounter := make(map[byte][]uint8)
 	for _, nt := range ntToCount {
-		ntCount[nt] = make([]uint8, len(ref))
-		for i := range ntCount[nt] {
-			ntCount[nt][i] = 0
+		ntCounter[nt] = make([]uint8, mapLen)
+		for j := range ntCounter[nt] {
+			ntCounter[nt][j] = 0
 		}
 	}
 
-	var seq []byte
-	for _, fa := range fastas {
+	snvMap := make([]bool, mapLen)
+	showMap := make([]bool, mapLen)
+	finalMap := make([]bool, mapLen)
+	fillBoolArr(showMap, true)
+	fillBoolArr(snvMap, false)
+	var seq, ref []byte
+	for i, fa := range fastas {
 		fmt.Printf("%s Reading %s\n", timeStamp(), fa)
 		_, seq = fileformat.ReadSingleFasta(fa)
-		siteInfo.AccumulateSeqSNV(seq)
-		// Count site nt frequency
-		for i, nt := range seq {
-			for _, c := range ntToCount {
-				if snv.IsEqualAlphabet(c, nt) {
-					ntCount[c][i]++
-				}
-			}
+		if i == 0 {
+			_, ref = fileformat.ReadSingleFasta(fa)
 		}
+		// snv.UpdateSNVMap(snvMap, ref, seq)
+		// snv.UpdateShowMapByMaskChar(showMap, seq, maskChar)
+		// snv.UpdateSiteNtCount(ntCounter, seq)
+		snv.UpdateSNVMapShowMapSiteCount(ref, seq, maskChar, snvMap, showMap, ntCounter)
 	}
 
-	// Decide show site
-	showMap := make([]bool, len(ref))
-	siteInfo.SnvmapAndMask(showMap)
-	fmt.Printf("%s Totel SNV between sequences : %d\n", timeStamp(), logBoolCount(showMap, true))
+	// Decide final show site
+	snv.BoolArrAND(finalMap, showMap, snvMap)
 
 	// extract gene feature from gff
 	fmt.Printf("%s Extracting gene from %s...\n", timeStamp(), gff)
@@ -81,10 +87,10 @@ func main() {
 	// write feature set which range contain showMap true value
 	for _, feature := range geneSet.Features {
 		for i := feature.Start - 1; i < feature.End; i++ {
-			if showMap[i] {
+			if finalMap[i] {
 				s := fmt.Sprintf("%d\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%c\n",
 					i+1, feature.Name, string(feature.Strand), feature.Start, feature.End,
-					ntCount['A'][i], ntCount['T'][i], ntCount['C'][i], ntCount['G'][i], siteInfo.RefSeq[i])
+					ntCounter['A'][i], ntCounter['T'][i], ntCounter['C'][i], ntCounter['G'][i], ref[i])
 				_, err := file.WriteString(s)
 				logErr(err)
 			}
@@ -96,7 +102,7 @@ func main() {
 	logErr(err)
 	defer f.Close()
 
-	aln := make([]byte, 0, logBoolCount(showMap, true))
+	aln := make([]byte, 0, logBoolCount(finalMap, true))
 	for _, fa := range fastas {
 		id, seq := fileformat.ReadSingleFasta(fa)
 		// write id
@@ -105,7 +111,7 @@ func main() {
 
 		// write single alignment
 		for i, c := range seq {
-			if showMap[i] {
+			if finalMap[i] {
 				aln = append(aln, c)
 			}
 		}
@@ -140,4 +146,10 @@ func logBoolCount(ba []bool, checkB bool) int {
 		}
 	}
 	return count
+}
+
+func fillBoolArr(arr []bool, fill bool) {
+	for i := range arr {
+		arr[i] = fill
+	}
 }

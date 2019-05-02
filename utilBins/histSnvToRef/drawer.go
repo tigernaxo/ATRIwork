@@ -13,20 +13,16 @@ import (
 	"github.com/tigernaxo/ATRIwork/snv"
 )
 
-func drawHist2(conf *config) *image.RGBA {
+func drawHist(conf *config) *image.RGBA {
 	_, ref := fileformat.ReadSingleFasta(conf.refSeq)
+	mapLen := len(ref)
+
 	// 只要剩餘的convas佔超過全部的1/5(genome length 1/4)，minUnit就往下調整一個log級數
 	minUnit := math.Pow10(int(math.Floor(math.Log10(float64(len(ref) / 4)))))
 	gapRatio := conf.gapRatio
 	fileList := conf.fileList
 	convasWidth := int(math.Ceil(float64(len(ref))/minUnit)) * int(minUnit)
 
-	// get showMap
-	info := snv.NewInfo(ref, []byte{'N', '-'}, false)
-	for _, fa := range fileList {
-		_, seq := fileformat.ReadSingleFasta(fa)
-		info.AccumulateSeqSNV(seq)
-	}
 	// pre setting convas
 	unitConvas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
@@ -42,20 +38,27 @@ func drawHist2(conf *config) *image.RGBA {
 		image.Point{1920, len(fileList)*10 + gapHeight*(len(fileList)-1)},
 	})
 
+	ntMask := []byte{'N', '-'}
+	showMap := mkSiteMap(mapLen, true)
+	// get showMap
+	for _, fa := range fileList {
+		_, seq := fileformat.ReadSingleFasta(fa)
+		snv.UpdateShowMapByMaskChar(showMap, seq, ntMask)
+	}
 	// drawing
 	anchorY := 0
-	snvMap := mkSiteMap(len(ref), false)
+	snvMap := mkSiteMap(mapLen, false)
 	for i, fa := range fileList {
 		_, seq := fileformat.ReadSingleFasta(fa)
 		setBool(snvMap, false)
 		snv.UpdateSNVMap(snvMap, ref, seq)
-		if len(snvMap) > convasWidth {
-			log.Panicf("[Error] snvMap is larger then convasWidth \n")
+		if len(seq) > mapLen {
+			log.Panicf("[Error] snvMap is smaller then sequence\n")
 		}
 
 		// fill histogram
-		for x := 0; x < len(snvMap); x++ {
-			if snvMap[x] && info.ShowMask[x] {
+		for x := 0; x < mapLen; x++ {
+			if snvMap[x] && showMap[x] {
 				for i := maxInt(0, x-int((conf.intensity-1.0)/2.0)); i < minInt(len(snvMap), x+int((conf.intensity-1.0)/2.0)); i++ {
 					unitConvas.SetRGBA(i, 0, *snvColor)
 				}

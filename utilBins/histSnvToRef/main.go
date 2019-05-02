@@ -35,7 +35,7 @@ func main() {
 	convasWidth := int(math.Ceil(float64(len(refSeq))/minUnit)) * int(minUnit)
 
 	// Draw histogram
-	convas := drawHist2(conf)
+	convas := drawHist(conf)
 
 	resizeThenSavePng(convas, uint(1920), uint(1080), conf.outDir+"/"+outHist)
 

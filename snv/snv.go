@@ -4,84 +4,90 @@ import (
 	"log"
 )
 
-// Info struct contain accumulate number of Nt and ref Nt
-type Info struct {
-	RefSeq                        []byte
-	seqCount                      uint
-	realRef                       []byte
-	snvToRef                      bool
-	SnvMap                        []bool
-	ShowMask                      []bool
-	ExcludeSiteIfAnySampleContain []byte
-}
-
-// NewInfo return a new SiteInfo
-func NewInfo(ref []byte, excludeSideByNtSet []byte, snvToRef bool) *Info {
-	// Default ShowMask (all true)
-	mask := make([]bool, len(ref))
-	for i := range mask {
-		mask[i] = true
+// UpdateSNVMapShowMapSiteCount combine some logical to boost
+func UpdateSNVMapShowMapSiteCount(ref []byte, seq []byte, maskChar []byte, snvMap []bool, showMap []bool, counter map[byte][]uint8) {
+	if len(ref) < len(seq) {
+		log.Panicf("[Error] reference length is shoter!\n")
 	}
-	// Default SnvMap (all false)
-	snvMap := make([]bool, len(ref))
-	for i := range snvMap {
-		snvMap[i] = false
+	if len(snvMap) != len(ref) || len(showMap) != len(ref) {
+		log.Panicf("[Error] map size is not equal to ref length!\n")
 	}
-
-	// return SiteInfo
-	return &Info{
-		seqCount:                      0,
-		RefSeq:                        ref,
-		ShowMask:                      mask,
-		SnvMap:                        snvMap,
-		ExcludeSiteIfAnySampleContain: excludeSideByNtSet,
-		snvToRef:                      snvToRef,
-	}
-}
-
-// AccumulateSeqSNV accumulate sequence to SiteInfo
-func (s *Info) AccumulateSeqSNV(seq []byte) {
-	//
-	if s.snvToRef {
-		s.realRef = s.RefSeq
-	} else {
-		s.seqCount++
-		if s.seqCount == 1 {
-			s.realRef = seq
+	for _, ba := range counter {
+		if len(ba) != len(ref) {
+			log.Panicf("[Error] counter map size is not equal to ref length!\n")
 		}
 	}
+	for i, nt := range seq {
+		if !IsEqualAlphabet(nt, ref[i]) {
+			snvMap[i] = true
+		}
+		for _, ex := range maskChar {
+			if IsEqualAlphabet(nt, ex) {
+				showMap[i] = false
+			}
+		}
+		for c, arr := range counter {
+			if c == nt {
+				arr[i]++
+			}
+		}
+	}
+}
 
+// UpdateSNVMap update snv
+func UpdateSNVMap(snvMap []bool, ref []byte, seq []byte) {
+	if len(ref) < len(seq) {
+		log.Panicf("[Error] reference length is shoter!\n")
+	}
+	for i, nt := range seq {
+		if !IsEqualAlphabet(nt, ref[i]) {
+			snvMap[i] = true
+		}
+	}
+}
+
+// UpdateShowMapByMaskChar update...
+func UpdateShowMapByMaskChar(showMap []bool, seq []byte, maskChar []byte) {
 	// Panic if seq length > reference length
-	if len(s.RefSeq) < len(seq) {
-		log.Panicf("[Error] Sequence No.%d length %d is longer than referrnce sequence %d\n", s.seqCount, len(seq), len(s.RefSeq))
+	if len(seq) > len(showMap) {
+		log.Panicf("[Error] Length of sequence bigger then showMap.\n")
 	}
 	for i, c := range seq {
-		// Update SnvMap
-		if s.seqCount != 1 || s.snvToRef {
-			if !IsEqualAlphabet(c, s.realRef[i]) {
-				s.SnvMap[i] = true
-			}
-		}
 		// Accumulate exlude Site
-		for _, ex := range s.ExcludeSiteIfAnySampleContain {
+		for _, ex := range maskChar {
 			if IsEqualAlphabet(c, ex) {
-				s.ShowMask[i] = false
+				showMap[i] = false
 			}
 		}
 	}
 }
 
-// SnvmapAndMask output And operated slice
-func (s *Info) SnvmapAndMask(outMap []bool) {
-	if len(outMap) != len(s.SnvMap) {
-		log.Panicf("[Error] Trying to calculate (SnvMap AND Mask), but ")
-		log.Panicf("the length of output []boole vector is not equal to reference length\n")
+// UpdateSiteNtCount update site nt count
+func UpdateSiteNtCount(counter map[byte][]uint8, seq []byte) {
+	for _, a := range counter {
+		if len(a) < len(seq) {
+			log.Panicf("[Error] Sequence is longer than nt counter: %d > %d\n", len(seq), len(a))
+		}
 	}
-	for i, b := range s.SnvMap {
-		if s.ShowMask[i] && b {
-			outMap[i] = true
+	for i, nt := range seq {
+		for c, arr := range counter {
+			if c == nt {
+				arr[i]++
+			}
+		}
+	}
+}
+
+// BoolArrAND and operate
+func BoolArrAND(out, first, second []bool) {
+	if len(first) != len(second) || len(first) != len(out) {
+		log.Panicf("[Error] Three array length is not equal.\n")
+	}
+	for i, b := range first {
+		if b && second[i] {
+			out[i] = true
 		} else {
-			outMap[i] = false
+			out[i] = false
 		}
 	}
 }
@@ -104,16 +110,4 @@ func IsEqualAlphabet(c, d byte) bool {
 		}
 	}
 	return false
-}
-
-// UpdateSNVMap update snv
-func UpdateSNVMap(snvMap []bool, ref []byte, seq []byte) {
-	if len(ref) < len(seq) {
-		log.Panicf("[Error] reference length is shoter!\n")
-	}
-	for i, nt := range seq {
-		if !IsEqualAlphabet(nt, ref[i]) {
-			snvMap[i] = true
-		}
-	}
 }
