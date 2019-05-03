@@ -59,7 +59,7 @@ func drawHist(conf *config) *image.RGBA {
 		// fill histogram
 		for x := 0; x < mapLen; x++ {
 			if snvMap[x] && showMap[x] {
-				for i := maxInt(0, x-int((conf.intensity-1.0)/2.0)); i < minInt(len(snvMap), x+int((conf.intensity-1.0)/2.0)); i++ {
+				for i := maxInt(0, x-int((conf.intensity-1.0)/2.0)); i <= minInt(len(snvMap)-1, x+int((conf.intensity-1.0)/2.0)); i++ {
 					unitConvas.SetRGBA(i, 0, *snvColor)
 				}
 			}

@@ -27,7 +27,7 @@ func UpdateSNVMapShowMapSiteCount(ref []byte, seq []byte, maskChar []byte, snvMa
 			}
 		}
 		for c, arr := range counter {
-			if c == nt {
+			if IsEqualAlphabet(c, nt) {
 				arr[i]++
 			}
 		}

@@ -59,6 +59,34 @@ func main() {
 		}
 		snv.UpdateSNVMapShowMapSiteCount(ref, seq, maskChar, snvMap, showMap, ntCounter)
 	}
+	// Debug
+	// fmt.Println("==============Debug Start==============")
+	// for i := 0; i < len(ntCounter['A']); i++ {
+	// 	sum := 0
+	// 	site := i + 1
+	// 	for _, arr := range ntCounter {
+	// 		sum = sum + int(arr[i])
+	// 	}
+	// 	if sum != len(fastas) && showMap[i] {
+	// 		fmt.Printf("%d\n", i)
+	// 		fmt.Printf("Length of counter array: %d \n", len(ntCounter['A']))
+	// 		fmt.Printf("Site number:\n")
+	// 		fmt.Printf("\tA:%d", ntCounter['A'][site])
+	// 		fmt.Printf("\tT:%d", ntCounter['T'][site])
+	// 		fmt.Printf("\tC:%d", ntCounter['C'][site])
+	// 		fmt.Printf("\tG:%d", ntCounter['G'][site])
+	// 		fmt.Printf("\n")
+	// 		fmt.Printf("Site: %d(1base) bases is:\n", i+1)
+	// 		for _, fa := range fastas {
+	// 			_, seq := fileformat.ReadSingleFasta(fa)
+	// 			fmt.Printf("\t%c", seq[site])
+	// 		}
+	// 		fmt.Printf("\n")
+	// 		break
+	// 	}
+	// }
+	// fmt.Println("==============Debug End==============")
+	// Debug
 
 	// Decide final show site
 	snv.BoolArrAND(finalMap, showMap, snvMap)
