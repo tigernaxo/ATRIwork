@@ -56,6 +56,12 @@ func drawHist(conf *config) *image.RGBA {
 			log.Panicf("[Error] snvMap is smaller then sequence\n")
 		}
 
+		for x := 0; x < unitConvas.Bounds().Max.X; x++ {
+			unitConvas.SetRGBA(x, 0, *bgColor)
+		}
+		for x := 0; x < shinkedConvas.Bounds().Max.X; x++ {
+			shinkedConvas.SetRGBA(x, 0, *bgColor)
+		}
 		// fill histogram
 		for x := 0; x < mapLen; x++ {
 			if snvMap[x] && showMap[x] {

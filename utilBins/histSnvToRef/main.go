@@ -11,6 +11,7 @@ import (
 )
 
 var snvColor = &color.RGBA{0, 0, 0, 255}
+var bgColor = &color.RGBA{0, 0, 0, 0}
 var genomeColor = &color.RGBA{0, 0, 0, 255}
 
 func main() {
