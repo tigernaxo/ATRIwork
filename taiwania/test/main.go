@@ -3,174 +3,146 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
+	"strings"
+	"sync"
 
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
-type SSHTerminal struct {
-	Session *ssh.Session
-	exitMsg string
-	stdout  io.Reader
-	stdin   io.Writer
-	stderr  io.Reader
-}
+// https://www.reddit.com/r/golang/comments/87hi86/interactive_ssh/
+// Execute a shell and pipe in commands into stdin
+// https://studygolang.com/articles/7675
 
 func main() {
+	test := make(chan int, 3)
+	// go func() {
+	// 	i := 0
+	// 	select {
+	// 	case test <- i:
+	// 		i++
+	// 	}
+	// }()
+	test <- 0
+	test <- 1
+	test <- 3
+	// fmt.Println(<-test, <-test)
+	go func() {
+		for {
+			select {
+			case i := <-test:
+				fmt.Printf("%d\t", i)
+			}
+		}
+	}()
+	test <- 4
+	fmt.Println()
+	os.Exit(0)
+
+	user := os.Args[2]
+	address := os.Args[1]
+	var pw string
+	if len(os.Args) >= 4 {
+		pw = os.Args[3]
+	} else {
+		pw = ""
+	}
+	if len(os.Args) < 4 {
+		fmt.Println("Usage...")
+		os.Exit(0)
+	}
 	sshConfig := &ssh.ClientConfig{
-		User: "bbsu",
+		User: user,
 		Auth: []ssh.AuthMethod{
-			ssh.Password(""),
+			ssh.Password(pw),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	client, err := ssh.Dial("tcp", "ptt.cc:22", sshConfig)
-	if err != nil {
-		fmt.Println(err)
-	}
+	client, err := ssh.Dial("tcp", address, sshConfig)
+	logErr(err)
 	defer client.Close()
 
-	err = New(client)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-func (t *SSHTerminal) updateTerminalSize() {
-
-	go func() {
-		// SIGWINCH is sent to the process when the window size of the terminal has
-		// changed.
-		sigwinchCh := make(chan os.Signal, 1)
-		signal.Notify(sigwinchCh, syscall.SIGWINCH)
-
-		fd := int(os.Stdin.Fd())
-		termWidth, termHeight, err := terminal.GetSize(fd)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		for {
-			select {
-			// The client updated the size of the local PTY. This change needs to occur
-			// on the server side PTY as well.
-			case sigwinch := <-sigwinchCh:
-				if sigwinch == nil {
-					return
-				}
-				currTermWidth, currTermHeight, err := terminal.GetSize(fd)
-
-				// Terminal size has not changed, don't do anything.
-				if currTermHeight == termHeight && currTermWidth == termWidth {
-					continue
-				}
-
-				t.Session.WindowChange(currTermHeight, currTermWidth)
-				if err != nil {
-					fmt.Printf("Unable to send window-change reqest: %s.", err)
-					continue
-				}
-
-				termWidth, termHeight = currTermWidth, currTermHeight
-
-			}
-		}
-	}()
-
-}
-
-func (t *SSHTerminal) interactiveSession() error {
-
-	defer func() {
-		if t.exitMsg == "" {
-			fmt.Fprintln(os.Stdout, "the connection was closed on the remote side on ", time.Now().Format(time.RFC822))
-		} else {
-			fmt.Fprintln(os.Stdout, t.exitMsg)
-		}
-	}()
-
-	fd := int(os.Stdin.Fd())
-	state, err := terminal.MakeRaw(fd)
-	if err != nil {
-		return err
-	}
-	defer terminal.Restore(fd, state)
-
-	termWidth, termHeight, err := terminal.GetSize(fd)
-	if err != nil {
-		return err
-	}
-
-	termType := os.Getenv("TERM")
-	if termType == "" {
-		termType = "xterm-256color"
-	}
-
-	err = t.Session.RequestPty(termType, termHeight, termWidth, ssh.TerminalModes{})
-	if err != nil {
-		return err
-	}
-
-	t.updateTerminalSize()
-
-	t.stdin, err = t.Session.StdinPipe()
-	if err != nil {
-		return err
-	}
-	t.stdout, err = t.Session.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	t.stderr, err = t.Session.StderrPipe()
-
-	go io.Copy(os.Stderr, t.stderr)
-	go io.Copy(os.Stdout, t.stdout)
-	go func() {
-		buf := make([]byte, 128)
-		for {
-			n, err := os.Stdin.Read(buf)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			if n > 0 {
-				_, err = t.stdin.Write(buf[:n])
-				if err != nil {
-					fmt.Println(err)
-					t.exitMsg = err.Error()
-					return
-				}
-			}
-		}
-	}()
-
-	err = t.Session.Shell()
-	if err != nil {
-		return err
-	}
-	err = t.Session.Wait()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func New(client *ssh.Client) error {
-
 	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
+	logErr(err)
 	defer session.Close()
 
-	s := SSHTerminal{
-		Session: session,
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          1,     // disable echoing
+		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 	}
 
-	return s.interactiveSession()
+	if err := session.RequestPty("vt100", 80, 40, modes); err != nil {
+		log.Fatal(err)
+	}
+
+	w, err := session.StdinPipe()
+	if err != nil {
+		panic(err)
+	}
+	r, err := session.StdoutPipe()
+	if err != nil {
+		panic(err)
+	}
+	e, err := session.StderrPipe()
+	if err != nil {
+		panic(err)
+	}
+
+	in, out := MuxShell(w, r, e)
+	in <- "pwd"
+	in <- "pwd"
+	if err := session.Shell(); err != nil {
+		log.Fatal(err)
+	}
+	// <-out //ignore the shell output
+
+	in <- "exit"
+	in <- "exit"
+
+	fmt.Printf("%s\n%s\n", <-out, <-out)
+
+	_, _ = <-out, <-out
+	session.Wait()
+}
+func MuxShell(w io.Writer, r, e io.Reader) (chan<- string, <-chan string) {
+	in := make(chan string, 3)
+	out := make(chan string, 5)
+	var wg sync.WaitGroup
+	wg.Add(1) //for the shell itself
+	go func() {
+		for cmd := range in {
+			wg.Add(1)
+			w.Write([]byte(cmd + "\n"))
+			wg.Wait()
+		}
+	}()
+
+	go func() {
+		var (
+			buf [65 * 1024]byte
+			t   int
+		)
+		for {
+			n, err := r.Read(buf[t:])
+			if err != nil {
+				fmt.Println(err.Error())
+				close(in)
+				close(out)
+				return
+			}
+			t += n
+			result := string(buf[:t])
+			if strings.Contains(result, "Username:") ||
+				strings.Contains(result, "Password:") ||
+				strings.Contains(result, "#") {
+				out <- string(buf[:t])
+				t = 0
+				wg.Done()
+			}
+		}
+	}()
+	return in, out
 }

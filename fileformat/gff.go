@@ -23,6 +23,29 @@ type FeatureSet struct {
 	Features []*Feature
 }
 
+// FeatureGeneCountAccumulate 累積
+func FeatureGeneCountAccumulate(fNameCount map[string]int, fClass, gff string) {
+	var featureName string
+
+	f, err := os.Open(gff)
+	logErr(err)
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	pattern := regexp.MustCompile(`gene=[^;$]*`)
+	for scanner.Scan() {
+		lineArr := strings.Split(scanner.Text(), "\t")
+		if !strings.HasPrefix(lineArr[0], "#") && len(lineArr) == 9 && lineArr[2] == fClass {
+			featureName = strings.TrimPrefix(string(pattern.Find([]byte(lineArr[8]))), "gene=")
+			if _, ok := fNameCount[featureName]; ok {
+				fNameCount[featureName]++
+			} else if featureName != "" {
+				fNameCount[featureName] = 1
+			}
+		}
+	}
+}
+
 // FeatureSetFromGFF 從GFF3裡面抽取特徵的範圍(start, end)、正負股、名稱
 func FeatureSetFromGFF(featureClass, gffFile string) *FeatureSet {
 	fs := FeatureSet{
