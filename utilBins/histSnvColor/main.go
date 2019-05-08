@@ -41,8 +41,8 @@ func main() {
 	}
 	andBoolArray(showMap, snvMap, maskedShowMap)
 	//
-	strip := &SnvStrip{
-		NtColorMap: map[byte]*color.RGBA{
+	strip := &snvStrip{
+		ntColorMap: map[byte]*color.RGBA{
 			'A': &color.RGBA{255, 0, 0, 255},
 			'T': &color.RGBA{0, 255, 0, 255},
 			'C': &color.RGBA{0, 0, 255, 255},
@@ -91,15 +91,15 @@ func main() {
 	savePng(convas, "out.png")
 }
 
-type NtColor struct {
+type ntColor struct {
 	Nt      byte
 	NtColor *color.RGBA
 }
-type SnvStrip struct {
-	NtColorMap map[byte]*color.RGBA
+type snvStrip struct {
+	ntColorMap map[byte]*color.RGBA
 }
 
-func (s *SnvStrip) CleanThenDraw(nt []byte, convas *image.RGBA) {
+func (s *snvStrip) CleanThenDraw(nt []byte, convas *image.RGBA) {
 	// Check convas widthcolorConfig[nt[x]]
 	// if len(nt) != convas.Bounds().Max.X-1 {
 	// 	log.Panic("[Error] Len(nt to draw) != convas width")
@@ -115,7 +115,7 @@ func (s *SnvStrip) CleanThenDraw(nt []byte, convas *image.RGBA) {
 	// Draw
 	var currentColor *color.RGBA
 	for x := 0; x < len(nt); x++ {
-		for t, c := range s.NtColorMap {
+		for t, c := range s.ntColorMap {
 			if snv.IsEqualAlphabet(t, nt[x]) {
 				currentColor = c
 			}

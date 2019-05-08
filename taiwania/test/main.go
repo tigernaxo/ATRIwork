@@ -3,10 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
-	"strings"
-	"sync"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -16,30 +13,8 @@ import (
 // https://studygolang.com/articles/7675
 
 func main() {
-	test := make(chan int, 3)
-	// go func() {
-	// 	i := 0
-	// 	select {
-	// 	case test <- i:
-	// 		i++
-	// 	}
-	// }()
-	test <- 0
-	test <- 1
-	test <- 3
-	// fmt.Println(<-test, <-test)
-	go func() {
-		for {
-			select {
-			case i := <-test:
-				fmt.Printf("%d\t", i)
-			}
-		}
-	}()
-	test <- 4
-	fmt.Println()
-	os.Exit(0)
-
+	terminalHeight := 24
+	terminalWidth := 80
 	user := os.Args[2]
 	address := os.Args[1]
 	var pw string
@@ -68,81 +43,28 @@ func main() {
 	logErr(err)
 	defer session.Close()
 
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          1,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+	termType := os.Getenv("TERM")
+	if termType == "" {
+		termType = "xterm-256color"
 	}
 
-	if err := session.RequestPty("vt100", 80, 40, modes); err != nil {
-		log.Fatal(err)
-	}
+	err = session.RequestPty(termType, terminalHeight, terminalWidth, ssh.TerminalModes{})
+	logErr(err)
 
-	w, err := session.StdinPipe()
-	if err != nil {
-		panic(err)
-	}
-	r, err := session.StdoutPipe()
-	if err != nil {
-		panic(err)
-	}
-	e, err := session.StderrPipe()
-	if err != nil {
-		panic(err)
-	}
-
-	in, out := MuxShell(w, r, e)
-	in <- "pwd"
-	in <- "pwd"
-	if err := session.Shell(); err != nil {
-		log.Fatal(err)
-	}
-	// <-out //ignore the shell output
-
-	in <- "exit"
-	in <- "exit"
-
-	fmt.Printf("%s\n%s\n", <-out, <-out)
-
-	_, _ = <-out, <-out
-	session.Wait()
-}
-func MuxShell(w io.Writer, r, e io.Reader) (chan<- string, <-chan string) {
-	in := make(chan string, 3)
-	out := make(chan string, 5)
-	var wg sync.WaitGroup
-	wg.Add(1) //for the shell itself
-	go func() {
-		for cmd := range in {
-			wg.Add(1)
-			w.Write([]byte(cmd + "\n"))
-			wg.Wait()
-		}
-	}()
+	i, o, e := getPipes(session)
+	// 可以設置chan取得out跟err給http server使用
+	go io.Copy(os.Stderr, e)
+	go io.Copy(os.Stdout, o)
+	inChan := make(chan string, 10)
+	go chanToWriter(inChan, i)
 
 	go func() {
-		var (
-			buf [65 * 1024]byte
-			t   int
-		)
-		for {
-			n, err := r.Read(buf[t:])
-			if err != nil {
-				fmt.Println(err.Error())
-				close(in)
-				close(out)
-				return
-			}
-			t += n
-			result := string(buf[:t])
-			if strings.Contains(result, "Username:") ||
-				strings.Contains(result, "Password:") ||
-				strings.Contains(result, "#") {
-				out <- string(buf[:t])
-				t = 0
-				wg.Done()
-			}
-		}
+		inChan <- "ll"
+		inChan <- "exit"
 	}()
-	return in, out
+
+	err = session.Shell()
+	logErr(err)
+	err = session.Wait()
+	logErr(err)
 }
