@@ -16,14 +16,16 @@ func readerToChan(c chan<- string, r io.Reader) {
 	s := ""
 	for {
 		n, err := r.Read(buf)
-		logErr(err)
+		if err.Error() != "EOF" {
+			logErr(err)
+		}
 
 		switch n {
 		case 0:
 			c <- s
 			s = ""
 		default:
-			s += string(buf)
+			s += string(buf[:n])
 		}
 
 	}
