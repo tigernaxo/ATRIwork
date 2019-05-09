@@ -5,12 +5,11 @@ import (
 	"image/color"
 	"math"
 	"os"
-	"time"
 
 	"github.com/tigernaxo/ATRIwork/fileformat"
 )
 
-var snvColor = &color.RGBA{0, 0, 0, 255}
+var snvColor = &color.RGBA{255, 0, 0, 255}
 var bgColor = &color.RGBA{0, 0, 0, 0}
 var genomeColor = &color.RGBA{0, 0, 0, 255}
 
@@ -49,8 +48,4 @@ func main() {
 	savePng(convas, conf.outDir+"/"+outScale)
 
 	fmt.Printf("%s All Done\n", timeStamp())
-}
-func timeStamp() string {
-	t := time.Now()
-	return fmt.Sprintf("[%02v:%02v:%02v]", t.Hour(), t.Minute(), t.Second())
 }

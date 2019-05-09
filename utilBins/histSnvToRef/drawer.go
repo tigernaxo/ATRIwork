@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/png"
@@ -45,7 +46,34 @@ func drawHist(conf *config) *image.RGBA {
 		_, seq := fileformat.ReadSingleFasta(fa)
 		snv.UpdateShowMapByMaskChar(showMap, seq, ntMask)
 	}
+	// mask showMap by all same nt
+	fmt.Printf("%s Calculating \"all same site\"...\n", timeStamp())
+
+	snvBetweenMap := mkSiteMap(mapLen, false)
+	var seq1 []byte
+	for i, fa := range fileList {
+		if i == 0 {
+			_, seq1 = fileformat.ReadSingleFasta(fa)
+		} else {
+			_, seq := fileformat.ReadSingleFasta(fa)
+			idx := len(seq1)
+			if len(seq) < idx {
+				idx = len(seq)
+			}
+			for j := 0; j < idx; j++ {
+				if !snv.IsEqualAlphabet(seq1[j], seq[j]) {
+					snvBetweenMap[j] = true
+				}
+			}
+		}
+	}
+	for i := 0; i < mapLen; i++ {
+		if !snvBetweenMap[i] {
+			showMap[i] = false
+		}
+	}
 	// drawing
+	fmt.Printf("%s Drawing histogram...\n", timeStamp())
 	anchorY := 0
 	snvMap := mkSiteMap(mapLen, false)
 	for i, fa := range fileList {
@@ -182,9 +210,4 @@ func mkSiteMap(len int, fill bool) []bool {
 		siteMap[i] = fill
 	}
 	return siteMap
-}
-func setBool(a []bool, b bool) {
-	for i := range a {
-		a[i] = b
-	}
 }

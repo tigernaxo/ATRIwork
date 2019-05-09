@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/tigernaxo/ATRIwork/fileformat"
 )
@@ -17,7 +18,7 @@ func main() {
 	gffs := os.Args[1:]
 	histHigh, gapHeight := 10, 2
 	heatColor := &color.RGBA{255, 0, 0, 255}
-	coreColor := &color.RGBA{0, 0, 0, 255}
+	coreColor := &color.RGBA{255, 0, 0, 255}
 
 	// 先union gff gene，一邊累積各gene在sample出現數量作為排序依據
 	genes := make(geneCountMap)
@@ -27,19 +28,19 @@ func main() {
 	// 逐一
 	sortedGeneArr := genes.sortToArr()
 
-	fmt.Printf("length of geneCountMap: %d\n", len(genes))
-	fmt.Printf("length of sortedGeneArr: %d\n", len(sortedGeneArr))
+	// fmt.Printf("length of geneCountMap: %d\n", len(genes))
+	// fmt.Printf("length of sortedGeneArr: %d\n", len(sortedGeneArr))
 	startY := 0
 	convas := image.NewRGBA(image.Rectangle{
 		image.Point{0, 0},
 		image.Point{len(sortedGeneArr), len(gffs)*histHigh + (len(gffs)-1)*gapHeight},
 	})
 	fmt.Printf("gff number: %d\n", len(gffs))
-	fmt.Printf("convas Height: %d\n", convas.Bounds().Max.Y)
-	fmt.Printf("convas Width: %d\n", convas.Bounds().Max.X)
-	for _, g := range sortedGeneArr {
-		fmt.Printf("%s\t%d\n", g.Name, g.Count)
-	}
+	// fmt.Printf("convas Height: %d\n", convas.Bounds().Max.Y)
+	// fmt.Printf("convas Width: %d\n", convas.Bounds().Max.X)
+	// for _, g := range sortedGeneArr {
+	// 	fmt.Printf("%s\t%d\n", g.Name, g.Count)
+	// }
 	for _, gff := range gffs {
 		heatMap := make([]bool, len(sortedGeneArr))
 		setBool(heatMap, false)
@@ -59,7 +60,9 @@ func main() {
 				i++
 			}
 		}
-		fmt.Printf("Union: %d, Find: %d, HeatMap: %d/%d, %s\n", len(sortedGeneArr), len(currentGeneMap), i, len(heatMap), gff)
+		tmpGff := strings.Split(gff, "/")
+		gffOut := tmpGff[len(tmpGff)-1]
+		fmt.Printf(" %s\t%d/%d\n", gffOut, i, len(heatMap))
 		// 畫圖
 		for x := 0; x < len(sortedGeneArr); x++ {
 			if heatMap[x] {
