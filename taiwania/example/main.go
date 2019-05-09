@@ -29,8 +29,8 @@ func main() {
 	} else {
 		pw = ""
 	}
-	if len(os.Args) < 4 {
-		fmt.Println("Usage...")
+	if len(os.Args) < 3 {
+		fmt.Printf("length of os.Args: %d...\n", len(os.Args))
 		os.Exit(0)
 	}
 	sshConfig := &ssh.ClientConfig{
@@ -51,6 +51,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println("eof")
 }
 
 func (t *SSHTerminal) updateTerminalSize() {
