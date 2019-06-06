@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -65,6 +66,9 @@ func main() {
 	go readerToChan(errChan, e)
 
 	// 測試從Channel提取server stdout, stderr
+	// 這裡可以接log file，讓使用者存取? 如果檔案太大怎麼辦？ 壓縮？
+	// 決定先不讓使用者存取，讓使用者存取輸出的檔案(ex: log)就好
+	// 直接在登入節點上傳任務資料夾到google drive
 	go func() {
 		for {
 			select {
@@ -76,10 +80,13 @@ func main() {
 		}
 	}()
 
-	// 送指令
+	// 測試送指令，這裡可以接到local web api, 讓web送指定
 	go func() {
+		time.Sleep(time.Second)
 		inChan <- "cd /home/naxo/文件/gossh"
+		time.Sleep(time.Second)
 		inChan <- "ls"
+		time.Sleep(time.Second)
 		inChan <- "exit"
 	}()
 

@@ -15,12 +15,16 @@ func readerToChan(c chan<- []byte, r io.Reader) {
 	all, buf := make([]byte, 256), make([]byte, 256)
 	for {
 		n, err := r.Read(buf)
-		logErr(err)
+		if err != nil && err.Error() != "EOF" {
+			log.Panicf("[Error] %v\n", err)
+		}
+		if n == 0 {
+			continue
+		}
 
 		switch buf[n-1] {
 		case 10:
 			all = append(all, buf[:n]...)
-			// fmt.Printf("%v", string(all))
 			c <- all
 			all = all[:0]
 		default:
