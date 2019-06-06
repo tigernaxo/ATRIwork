@@ -11,23 +11,21 @@ func logErr(err error) {
 	}
 }
 
-func readerToChan(c chan<- string, r io.Reader) {
-	buf := make([]byte, 128)
-	s := ""
+func readerToChan(c chan<- []byte, r io.Reader) {
+	all, buf := make([]byte, 256), make([]byte, 256)
 	for {
 		n, err := r.Read(buf)
-		if err.Error() != "EOF" {
-			logErr(err)
-		}
+		logErr(err)
 
-		switch n {
-		case 0:
-			c <- s
-			s = ""
+		switch buf[n-1] {
+		case 10:
+			all = append(all, buf[:n]...)
+			// fmt.Printf("%v", string(all))
+			c <- all
+			all = all[:0]
 		default:
-			s += string(buf[:n])
+			all = append(all, buf[:n]...)
 		}
-
 	}
 }
 

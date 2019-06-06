@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 
@@ -14,12 +13,15 @@ import (
 // https://studygolang.com/articles/7675
 
 func main() {
+	// Set pty size
 	terminalHeight := 24
 	terminalWidth := 80
-	user := os.Args[3]
+
+	// Set login information
 	address := os.Args[1]
 	port, err := strconv.Atoi(os.Args[2])
 	logErr(err)
+	user := os.Args[3]
 	var pw string
 	if len(os.Args) >= 5 {
 		pw = os.Args[4]
@@ -27,6 +29,7 @@ func main() {
 		pw = ""
 	}
 
+	// Set a config
 	sshConfig := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
@@ -35,54 +38,51 @@ func main() {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
+	// Dial to server
 	client, err := ssh.Dial("tcp", address+":"+strconv.Itoa(port), sshConfig)
 	logErr(err)
 	defer client.Close()
 
+	// Get client session
 	session, err := client.NewSession()
 	logErr(err)
 	defer session.Close()
 
+	// Request pty using session
 	termType := os.Getenv("TERM")
 	if termType == "" {
 		termType = "xterm-256color"
 	}
-
 	err = session.RequestPty(termType, terminalHeight, terminalWidth, ssh.TerminalModes{})
 	logErr(err)
 
+	// Get session pipes
 	i, o, e := getPipes(session)
-	// 可以設置chan取得out跟err給http server使用
-	go io.Copy(os.Stderr, e)
-	// go io.Copy(os.Stdout, o)
-	// outChan := make(chan string, 10)
-	// go readerToChan(outChan, o)
 	inChan := make(chan string, 10)
 	go chanToWriter(inChan, i)
+	outChan, errChan := make(chan []byte, 10), make(chan []byte, 10)
+	go readerToChan(outChan, o)
+	go readerToChan(errChan, e)
 
-	go func() {
-		inChan <- "ll"
-		inChan <- "exit"
-	}()
-	buf, all := make([]byte, 256), make([]byte, 256)
-
+	// 測試從Channel提取server stdout, stderr
 	go func() {
 		for {
-			n, err := o.Read(buf)
-			logErr(err)
-			// n永遠不會為0，需要修改readerToChan()
-			switch buf[n-1] {
-			case 10:
-				all = append(all, buf[:n]...)
-				fmt.Printf("%v", string(all))
-				all = all[:0]
-			default:
-				all = append(all, buf[:n]...)
+			select {
+			case out := <-outChan:
+				fmt.Printf("[outChan] %s", string(out))
+			case err := <-errChan:
+				fmt.Printf("[errChan] %s", string(err))
 			}
 		}
 	}()
 
-	fmt.Println(o, e)
+	// 送指令
+	go func() {
+		inChan <- "cd /home/naxo/文件/gossh"
+		inChan <- "ls"
+		inChan <- "exit"
+	}()
+
 	err = session.Shell()
 	logErr(err)
 	err = session.Wait()

@@ -43,7 +43,7 @@ func defaultTermConf() *termConf {
 }
 
 // How To Stop ?
-func tcpSSH(c *myConf, inChan <-chan string, outChan, errChan chan<- string) {
+func tcpSSH(c *myConf, inChan <-chan string, outChan, errChan chan<- []byte) {
 	client, err := ssh.Dial("tcp", c.getPortedAddress(), c.Client)
 	logErr(err)
 	defer client.Close()
