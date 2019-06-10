@@ -14,10 +14,6 @@ import (
 // https://studygolang.com/articles/7675
 
 func main() {
-	// Set pty size
-	terminalHeight := 24
-	terminalWidth := 80
-
 	// Set login information
 	address := os.Args[1]
 	port, err := strconv.Atoi(os.Args[2])
@@ -31,13 +27,7 @@ func main() {
 	}
 
 	// Set a config
-	sshConfig := &ssh.ClientConfig{
-		User: user,
-		Auth: []ssh.AuthMethod{
-			ssh.Password(pw),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
+	sshConfig := getInsecurePwSSHConfig(user, pw)
 
 	// Dial to server
 	client, err := ssh.Dial("tcp", address+":"+strconv.Itoa(port), sshConfig)
@@ -49,21 +39,11 @@ func main() {
 	logErr(err)
 	defer session.Close()
 
-	// Request pty using session
-	termType := os.Getenv("TERM")
-	if termType == "" {
-		termType = "xterm-256color"
-	}
-	err = session.RequestPty(termType, terminalHeight, terminalWidth, ssh.TerminalModes{})
-	logErr(err)
+	requestDefaultPty(session)
 
 	// Get session pipes
-	i, o, e := getPipes(session)
-	inChan := make(chan string, 10)
-	go chanToWriter(inChan, i)
-	outChan, errChan := make(chan []byte, 10), make(chan []byte, 10)
-	go readerToChan(outChan, o)
-	go readerToChan(errChan, e)
+	inChan, outChan, errChan := make(chan string, 10), make(chan []byte, 10), make(chan []byte, 10)
+	pipeToChan(session, inChan, outChan, errChan)
 
 	// 測試從Channel提取server stdout, stderr
 	// 這裡可以接log file，讓使用者存取? 如果檔案太大怎麼辦？ 壓縮？

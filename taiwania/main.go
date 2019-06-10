@@ -1,46 +1,30 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
-	"log"
-
-	"golang.org/x/crypto/ssh"
+	"os"
+	"strconv"
 )
 
 func main() {
+	user := os.Args[1]
+	pw := os.Args[2]
+	address := os.Args[3]
+	port, err := strconv.Atoi(os.Args[4])
+	logErr(err)
 	// var hostKey ssh.PublicKey
 	// An SSH client is represented with a ClientConn.
 	//
 	// To authenticate with the remote server you must pass at least one
 	// implementation of AuthMethod via the Auth field in ClientConfig,
 	// and provide a HostKeyCallback.
-	config := &ssh.ClientConfig{
-		User: "chiao",
-		Auth: []ssh.AuthMethod{
-			ssh.Password("anna1205"),
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		// HostKeyCallback: ssh.FixedHostKey(hostKey),
-	}
-	client, err := ssh.Dial("tcp", "localhost:22", config)
-	if err != nil {
-		log.Fatal("Failed to dial: ", err)
-	}
-	// Each ClientConn can support multiple interactive sessions,
-	// represented by a Session.
-	session, err := client.NewSession()
-	if err != nil {
-		log.Fatal("Failed to create session: ", err)
-	}
-	defer session.Close()
 
-	// Once a Session is created, you can execute a single command on
-	// the remote side using the Run method.
-	var b bytes.Buffer
-	session.Stdout = &b
-	if err := session.Run("/usr/bin/whoami"); err != nil {
-		log.Fatal("Failed to run: " + err.Error())
+	cmd := "cd /home/naxo/文件/gossh; ls -al"
+	b, e, err := ConnectAndRun(address, port, user, pw, cmd)
+	if b != nil {
+		fmt.Print(b.String())
 	}
-	fmt.Println(b.String())
+	if e != nil {
+		fmt.Print(e.String())
+	}
 }

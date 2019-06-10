@@ -3,6 +3,9 @@ package main
 import (
 	"io"
 	"log"
+	"time"
+
+	"github.com/pquerna/otp/totp"
 )
 
 func logErr(err error) {
@@ -40,4 +43,13 @@ func chanToWriter(c <-chan string, w io.WriteCloser) {
 			w.Write([]byte(cmd + "\n"))
 		}
 	}
+}
+
+// GetTOTP direct get totp from secret
+func GetTOTP(secret string) string {
+	otp, err := totp.GenerateCode(secret, time.Now().UTC())
+	if err != nil {
+		log.Panic(err)
+	}
+	return otp
 }
