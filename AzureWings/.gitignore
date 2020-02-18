@@ -1,0 +1,3 @@
+conda-envs/*
+pkg/*
+!pkg/*.tgz

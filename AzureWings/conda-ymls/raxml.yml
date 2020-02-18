@@ -1,0 +1,10 @@
+name: null
+channels:
+  - bioconda
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - libgcc-ng=8.2.0=hdf63c60_1
+  - raxml=8.2.12=h470a237_0
+prefix: /project/GP1/u00ycc00/AzureWings/conda-envs/envs/raxml
